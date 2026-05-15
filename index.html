@@ -1428,7 +1428,7 @@
             updateStatus('Menyambung ke VPS...', 'text-yellow-500', 'fa-spinner fa-spin');
             
             try {
-                liveSocket = new WebSocket('ws://103.186.1.104:3000');
+              liveSocket = new WebSocket('wss://livestreamingattauhid.duckdns.org');
             } catch(e) {
                 alert('Gagal buat koneksi: ' + e.message);
                 updateStatus(stream ? `Kamera Aktif` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle');
