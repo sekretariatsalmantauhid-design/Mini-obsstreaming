@@ -1450,7 +1450,7 @@
                     canvasStream.addTrack(stream.getAudioTracks()[0]);
                 }
 
-                const options = { mimeType: 'video/webm' };
+                const options = { mimeType: 'video/webm; codecs=h264' };
                 try { liveRecorder = new MediaRecorder(canvasStream, options); }
                 catch(e) { liveRecorder = new MediaRecorder(canvasStream); }
 
