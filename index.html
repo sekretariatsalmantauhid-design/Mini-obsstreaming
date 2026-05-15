@@ -163,29 +163,50 @@
         <div class="w-full md:w-7/12 lg:w-1/2 flex flex-col gap-6 overflow-y-auto h-full pr-2 pb-4 custom-scrollbar">
             
             <div class="bg-gray-800 p-5 rounded-lg border border-gray-700 shadow-md flex-shrink-0">
-                <h2 class="text-lg font-semibold mb-4 border-b border-gray-600 pb-2"><i class="fa-solid fa-sliders mr-2"></i>Sistem & Kamera</h2>
+                <h2 class="text-lg font-semibold mb-4 border-b border-gray-600 pb-2"><i class="fa-solid fa-sliders mr-2"></i>Sistem Perekaman & Streaming</h2>
                 
                 <div class="mb-4 bg-gray-900 p-3 rounded border border-gray-700">
                     <label class="block text-xs font-bold text-gray-400 mb-2"><i class="fa-solid fa-display mr-1"></i> Resolusi Perekaman & Kamera</label>
-                    <select id="resolutionSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer">
+                    <select id="resolutionSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3">
                         <option value="480">SD (854x480) - Super Ringan</option>
                         <option value="720" selected>HD (1280x720) - Standar Mulus</option>
                         <option value="1080">Full HD (1920x1080) - Kualitas Tinggi</option>
                         <option value="2160">4K (3840x2160) - Awas HP Panas!</option>
                     </select>
-                    <p class="text-[10px] text-yellow-500 mt-2">*Ubah resolusi saat kamera sedang mati.</p>
+
+                    <label class="flex justify-between text-xs font-bold text-gray-400 mb-2">
+                        <span><i class="fa-solid fa-magnifying-glass mr-1"></i> Zoom Kamera</span>
+                        <span id="lblCamZoom" class="text-blue-400">1.0x</span>
+                    </label>
+                    <div class="flex items-center gap-3 mb-4">
+                        <i class="fa-solid fa-minus text-gray-500 text-xs cursor-pointer hover:text-white" onclick="document.getElementById('camZoomInput').stepDown(); document.getElementById('camZoomInput').dispatchEvent(new Event('input'))"></i>
+                        <input type="range" id="camZoomInput" min="1.0" max="5.0" step="0.1" value="1.0" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        <i class="fa-solid fa-plus text-gray-500 text-xs cursor-pointer hover:text-white" onclick="document.getElementById('camZoomInput').stepUp(); document.getElementById('camZoomInput').dispatchEvent(new Event('input'))"></i>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-400 mb-2"><i class="fa-solid fa-key mr-1"></i> RTMP URL & Stream Key (YouTube)</label>
+                    <input type="text" id="rtmpInput" placeholder="rtmp://a.rtmp.youtube.com/live2/xxxx-xxxx-xxxx" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-3 py-3 focus:outline-none focus:border-blue-500 text-white font-mono">
+                    <p class="text-[10px] text-gray-500 mt-1">*Otomatis tersimpan & sinkron</p>
                 </div>
 
                 <div class="flex gap-3 mb-4">
-                    <button id="btnStartCam" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded font-semibold transition shadow"><i class="fa-solid fa-camera mr-2"></i>Nyalakan Kamera</button>
+                    <button id="btnStartCam" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded font-semibold transition shadow"><i class="fa-solid fa-camera mr-2"></i>Nyalakan Kamera</button>
                     <button id="btnStopCam" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded font-semibold transition shadow hidden"><i class="fa-solid fa-stop mr-2"></i>Matikan Kamera</button>
                 </div>
-                <div class="flex gap-3">
-                    <button id="btnRecord" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-4 rounded font-bold transition shadow text-lg">
-                        <i class="fa-solid fa-record-vinyl mr-2"></i>Mulai Rekam Local
+                
+                <div class="flex gap-2 mb-4">
+                    <button id="btnRecord" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded font-bold transition shadow text-sm border border-gray-600">
+                        <i class="fa-solid fa-record-vinyl mr-1 text-red-400"></i>Rekam Local
                     </button>
-                    <button id="btnStopRecord" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-4 rounded font-bold transition shadow hidden text-lg">
-                        <i class="fa-solid fa-square text-red-400 mr-2"></i>Stop & Simpan
+                    <button id="btnStopRecord" class="flex-1 bg-red-800 hover:bg-red-700 text-white py-3 rounded font-bold transition shadow hidden text-sm">
+                        <i class="fa-solid fa-square mr-1"></i>Stop Rekam
+                    </button>
+                    
+                    <button id="btnStream" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded font-bold transition shadow text-sm border border-blue-500">
+                        <i class="fa-solid fa-broadcast-tower mr-1"></i>GO LIVE
+                    </button>
+                    <button id="btnStopStream" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded font-bold transition shadow hidden text-sm">
+                        <i class="fa-solid fa-square mr-1"></i>Stop LIVE
                     </button>
                 </div>
             </div>
@@ -323,12 +344,16 @@
         const camOffPlaceholder = document.getElementById('camOffPlaceholder');
         const camPlaceholderText = document.getElementById('camPlaceholderText');
         const loadingDB = document.getElementById('loadingDB');
+        const rtmpInput = document.getElementById('rtmpInput');
+        const camZoomInput = document.getElementById('camZoomInput');
+        const lblCamZoom = document.getElementById('lblCamZoom');
         
         let overlays = []; 
         let dragTarget = null; 
         let dragOffsetX = 0;
         let dragOffsetY = 0;
         let isRemoteAction = false; 
+        let camZoom = 1.0;
 
         // --- SISTEM GUDANG BAWAH TANAH (INDEXEDDB) ---
         localforage.config({ name: 'MiniObsStudio', storeName: 'mediaFiles' });
@@ -415,8 +440,8 @@
         updateResolutionState();
 
         resolutionSelect.addEventListener('change', () => {
-            if(stream && !isRemoteAction) {
-                alert("Bos, matikan kamera dulu sebelum mengganti resolusi.");
+            if((stream || liveSocket) && !isRemoteAction) {
+                alert("Bos, matikan kamera dan matikan Live dulu sebelum mengganti resolusi.");
                 resolutionSelect.value = currentCamHeight; 
                 return;
             }
@@ -509,7 +534,6 @@
                 btn.classList.remove('text-gray-600');
                 btn.classList.add('text-blue-400');
                 
-                // PERBAIKAN: Rewind ke detik 0 HANYA jika dipanggil dan disuruh Play
                 if (vid.src) {
                     vid.currentTime = 0; 
                 }
@@ -565,18 +589,25 @@
 
         let stream = null;
         let animationFrameId = null;
-        let mediaRecorder = null;
-        let recordedChunks = [];
-        let isRecording = false;
         let currentScene = 'live'; 
         let transitionState = 0; 
         let transitionAlpha = 0;
         let pendingScene = null;
         
+        // Alat Rekam & Live
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecording = false;
+        
+        let liveSocket = null;
+        let liveRecorder = null;
+
         const btnStartCam = document.getElementById('btnStartCam');
         const btnStopCam = document.getElementById('btnStopCam');
         const btnRecord = document.getElementById('btnRecord');
         const btnStopRecord = document.getElementById('btnStopRecord');
+        const btnStream = document.getElementById('btnStream');
+        const btnStopStream = document.getElementById('btnStopStream');
         const statusBadge = document.getElementById('statusBadge');
         
         const btnToggleTimer = document.getElementById('btnToggleTimer');
@@ -597,6 +628,14 @@
         const overlaySpeedInput = document.getElementById('overlaySpeedInput');
         let sceneFadeSpeed = parseFloat(sceneSpeedInput.value);
         let overlayFadeSpeed = parseFloat(overlaySpeedInput.value);
+
+        rtmpInput.addEventListener('input', () => { if(!isRemoteAction) syncSettingsToFirebase(); });
+
+        camZoomInput.addEventListener('input', (e) => {
+            camZoom = parseFloat(e.target.value);
+            lblCamZoom.innerText = camZoom.toFixed(1) + 'x';
+            if(!isRemoteAction) syncSettingsToFirebase();
+        });
 
         sceneSpeedInput.addEventListener('input', (e) => {
             sceneFadeSpeed = parseFloat(e.target.value);
@@ -637,7 +676,9 @@
                 sceneSpeed: sceneSpeedInput.value,
                 overlaySpeed: overlaySpeedInput.value,
                 timerColor: timerColorInput.value,
-                timerAlpha: timerAlphaInput.value
+                timerAlpha: timerAlphaInput.value,
+                rtmpUrl: rtmpInput.value,
+                camZoom: camZoomInput.value 
             };
             window.fbSet(window.fbRef(window.fbDB, 'studio/settings'), settings);
         }
@@ -647,7 +688,6 @@
             const textOnlyOverlays = overlays.filter(o => o.type === 'text');
             window.fbSet(window.fbRef(window.fbDB, 'studio/textOverlays'), textOnlyOverlays);
             
-            // Simpan gambar ke DB Lokal (IndexedDB)
             const imgOverlays = overlays.filter(o => o.type === 'image');
             localforage.setItem('savedImageOverlays', imgOverlays);
         }
@@ -672,7 +712,7 @@
                 const s = snapshot.val();
                 if (s) {
                     isRemoteAction = true; 
-                    if (s.res && resolutionSelect.value !== s.res && !stream) { 
+                    if (s.res && resolutionSelect.value !== s.res && !stream && !liveSocket) { 
                         resolutionSelect.value = s.res; updateResolutionState(); 
                     }
                     if (s.sceneSpeed && sceneSpeedInput.value !== s.sceneSpeed) { 
@@ -689,6 +729,13 @@
                     if (s.timerAlpha && timerAlphaInput.value !== s.timerAlpha) { 
                         timerAlphaInput.value = s.timerAlpha; 
                         timerAlphaInput.dispatchEvent(new Event('input')); 
+                    }
+                    if (s.rtmpUrl && rtmpInput.value !== s.rtmpUrl) {
+                        rtmpInput.value = s.rtmpUrl;
+                    }
+                    if (s.camZoom && camZoomInput.value !== s.camZoom) {
+                        camZoomInput.value = s.camZoom;
+                        camZoomInput.dispatchEvent(new Event('input'));
                     }
                     isRemoteAction = false; 
                 }
@@ -717,7 +764,6 @@
                     isRemoteAction = true;
                     Object.keys(remoteStates).forEach(key => {
                         if(remoteStates[key] && window.mediaState[key]) {
-                            
                             window.mediaState[key].visible = remoteStates[key].visible;
                             applyMediaVisibilityUI(key);
                             
@@ -745,7 +791,6 @@
         // --- SISTEM LOAD GUDANG BAWAH TANAH SAAT APLIKASI DIBUKA ---
         async function loadDatabaseBasement() {
             try {
-                // 1. Load Video MP4
                 for (let key of Object.keys(mediaScenes)) {
                     const videoBlob = await localforage.getItem(`video_${key}`);
                     if (videoBlob) {
@@ -756,7 +801,6 @@
                     }
                 }
 
-                // 2. Load Gambar Overlays
                 const savedImgOverlays = await localforage.getItem('savedImageOverlays');
                 if (savedImgOverlays && savedImgOverlays.length > 0) {
                      for (let ov of savedImgOverlays) {
@@ -789,7 +833,6 @@
 
         window.addEventListener('load', loadDatabaseBasement);
 
-        // --- FUNGSI HELPER UNTUK SIMPAN GAMBAR KE INDEXEDDB ---
         async function saveImagesToIndexedDB() {
             const imgOverlays = overlays.filter(o => o.type === 'image');
             const dataToSave = [];
@@ -808,7 +851,6 @@
             localforage.setItem('savedImageOverlays', dataToSave);
         }
 
-        // --- MENYIMPAN VIDEO KE GUDANG SAAT DIPILIH ---
         Object.keys(mediaScenes).forEach(key => {
             const input = document.getElementById(`${key}Input`);
             const select = document.getElementById(`${key}Playback`);
@@ -868,7 +910,7 @@
                     w: w, h: h, scale: 1, visible: true, alpha: 0.0 
                 });
                 renderOverlayListUI();
-                saveImagesToIndexedDB(); // Simpan Gambar
+                saveImagesToIndexedDB(); 
                 overlayInput.value = ""; 
             };
             img.src = objectURL;
@@ -904,7 +946,7 @@
             overlays = [];
             renderOverlayListUI();
             syncOverlaysToFirebase();
-            saveImagesToIndexedDB(); // Update Gudang Bawah Tanah
+            saveImagesToIndexedDB();
         });
 
         window.toggleOverlay = function(id) {
@@ -1077,12 +1119,11 @@
                 stream.getAudioTracks().forEach(track => { track.enabled = (currentScene === 'live'); });
             }
 
-            // PERBAIKAN: Reset video yang diputar ke awal saat ganti scene
             Object.keys(mediaScenes).forEach(key => {
                 const vid = mediaScenes[key];
                 if (vid.src) {
                     vid.pause();
-                    vid.currentTime = 0; // REWIND otomatis saat ganti scene
+                    vid.currentTime = 0; 
                 }
             });
 
@@ -1115,7 +1156,10 @@
                     if (currentScene === 'live') camOffPlaceholder.classList.add('hidden');
                     btnStartCam.classList.add('hidden');
                     btnStopCam.classList.remove('hidden');
-                    updateStatus(`Kamera Aktif (${video.videoWidth}x${video.videoHeight})`, 'text-green-400', 'fa-video');
+                    
+                    if (!liveSocket) {
+                        updateStatus(`Kamera Aktif (${video.videoWidth}x${video.videoHeight})`, 'text-green-400', 'fa-video');
+                    }
                     vuMeterWrapper.classList.remove('hidden'); 
                 };
             } catch (err) { 
@@ -1132,7 +1176,10 @@
             if (currentScene === 'live') camOffPlaceholder.classList.remove('hidden');
             btnStartCam.classList.remove('hidden');
             btnStopCam.classList.add('hidden');
-            updateStatus('Standby', 'text-gray-300', 'fa-circle');
+            
+            if (!liveSocket) {
+                updateStatus('Standby', 'text-gray-300', 'fa-circle');
+            }
             camPlaceholderText.innerText = "Kamera Belum Aktif";
             vuMeterWrapper.classList.add('hidden'); 
         });
@@ -1224,11 +1271,28 @@
             ctx.fillStyle = "#000000";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Gambar Background Utama
+            // 1. Gambar Background Utama (Dengan Logika Zoom)
             if (currentScene === 'live') {
                 if (stream && !video.paused) {
                     ctx.globalAlpha = 1.0;
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const vw = video.videoWidth;
+                    const vh = video.videoHeight;
+                    const cw = canvas.width;
+                    const ch = canvas.height;
+
+                    // Mengaktifkan fitur zoom software
+                    if (vw && vh) {
+                        const cropW = vw / camZoom;
+                        const cropH = vh / camZoom;
+                        const cropX = (vw - cropW) / 2;
+                        const cropY = (vh - cropH) / 2;
+                        
+                        ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cw, ch);
+                    } else {
+                        // Fallback kalau video width belum siap
+                        ctx.drawImage(video, 0, 0, cw, ch);
+                    }
                 }
             } else if (mediaScenes[currentScene]) {
                 drawScene(currentScene, true);
@@ -1244,7 +1308,7 @@
                 });
             }
 
-            // 3. Gambar Transisi Fade to Black (Ganti Scene)
+            // 3. Gambar Transisi Fade to Black
             if (transitionState > 0) {
                 if (transitionState === 1) {
                     transitionAlpha = Math.min(1.0, transitionAlpha + sceneFadeSpeed);
@@ -1260,7 +1324,7 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            // 4. Gambar Overlays (Teks, Gambar, Timer)
+            // 4. Gambar Overlays
             overlays.forEach(ov => {
                 if (ov.visible) {
                     ov.alpha = Math.min(1.0, ov.alpha + overlayFadeSpeed);
@@ -1352,7 +1416,75 @@
 
         drawFrame();
 
-        // --- MANAJEMEN PEREKAMAN DENGAN AUDIO GABUNGAN ---
+        // --- SISTEM BROADCAST STREAMING KE VPS (YOUTUBE) ---
+        btnStream.addEventListener('click', () => {
+            const rtmpUrl = rtmpInput.value.trim();
+            if (!rtmpUrl) {
+                alert('Bos, isi dulu URL RTMP dan Stream Key dari YouTube!');
+                return;
+            }
+
+            initAudio(); 
+            updateStatus('Menyambung ke VPS...', 'text-yellow-500', 'fa-spinner fa-spin');
+            
+            try {
+                liveSocket = new WebSocket('ws://103.186.1.104:3000');
+            } catch(e) {
+                alert('Gagal buat koneksi: ' + e.message);
+                updateStatus(stream ? `Kamera Aktif` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle');
+                return;
+            }
+
+            liveSocket.onopen = () => {
+                updateStatus('ON AIR (LIVE)', 'text-red-500', 'fa-broadcast-tower fa-fade');
+                btnStream.classList.add('hidden');
+                btnRecord.classList.add('hidden'); 
+                btnStopStream.classList.remove('hidden');
+
+                liveSocket.send(rtmpUrl);
+
+                const canvasStream = canvas.captureStream(30);
+                if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) {
+                    canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]);
+                } else if (stream && stream.getAudioTracks().length > 0) {
+                    canvasStream.addTrack(stream.getAudioTracks()[0]);
+                }
+
+                const options = { mimeType: 'video/webm' };
+                try { liveRecorder = new MediaRecorder(canvasStream, options); }
+                catch(e) { liveRecorder = new MediaRecorder(canvasStream); }
+
+                liveRecorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0 && liveSocket.readyState === WebSocket.OPEN) {
+                        liveSocket.send(e.data);
+                    }
+                };
+                liveRecorder.start(1000); 
+            };
+
+            liveSocket.onclose = () => { stopLiveStream(); };
+            liveSocket.onerror = (err) => { 
+                console.error("WebSocket Error:", err);
+                stopLiveStream(); 
+                alert('Koneksi ke VPS Terputus! Pastikan VPS menyala.');
+            };
+        });
+
+        function stopLiveStream() {
+            if (liveRecorder && liveRecorder.state !== 'inactive') liveRecorder.stop();
+            if (liveSocket && liveSocket.readyState === WebSocket.OPEN) liveSocket.close();
+            
+            liveSocket = null;
+            btnStream.classList.remove('hidden');
+            btnRecord.classList.remove('hidden');
+            btnStopStream.classList.add('hidden');
+            
+            updateStatus(stream ? `Kamera Aktif` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle');
+        }
+
+        btnStopStream.addEventListener('click', stopLiveStream);
+
+        // --- MANAJEMEN PEREKAMAN LOKAL ---
         btnRecord.addEventListener('click', () => {
             initAudio(); 
             const canvasStream = canvas.captureStream(30);
@@ -1377,6 +1509,7 @@
             isRecording = true;
 
             btnRecord.classList.add('hidden');
+            btnStream.classList.add('hidden');
             btnStopRecord.classList.remove('hidden');
             updateStatus('Merekam...', 'text-red-500', 'fa-circle-dot');
         });
@@ -1386,6 +1519,7 @@
                 mediaRecorder.stop();
                 isRecording = false;
                 btnRecord.classList.remove('hidden');
+                btnStream.classList.remove('hidden');
                 btnStopRecord.classList.add('hidden');
                 updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle');
             }
@@ -1406,6 +1540,35 @@
                 document.body.removeChild(a);
             }, 100);
         }
+
+        // --- TIMER KAJIAN ---
+        function formatTime(totalSeconds) {
+            const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (totalSeconds % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        btnToggleTimer.addEventListener('click', () => {
+            timerActive = !timerActive;
+            if (timerActive) {
+                lastTimerUpdate = Date.now();
+                btnToggleTimer.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Timer';
+                btnToggleTimer.classList.replace('bg-blue-600', 'bg-yellow-600');
+                btnToggleTimer.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-700');
+            } else {
+                btnToggleTimer.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Mulai Timer';
+                btnToggleTimer.classList.replace('bg-yellow-600', 'bg-blue-600');
+                btnToggleTimer.classList.replace('hover:bg-yellow-700', 'hover:bg-blue-700');
+            }
+        });
+
+        btnResetTimer.addEventListener('click', () => {
+            timerSeconds = 0;
+            if (!timerActive) {
+                drawFrame();
+            }
+        });
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
