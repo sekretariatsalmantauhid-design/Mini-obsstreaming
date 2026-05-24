@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini OBS Web Studio - Dual Mode</title>
+    <title>Mini OBS Web Studio - Ultimate Edition</title>
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     
@@ -161,12 +161,18 @@
                         <h2 class="text-lg font-semibold mb-4 border-b border-gray-600 pb-2"><i class="fa-solid fa-sliders mr-2"></i>Sistem & Streaming</h2>
                         
                         <div class="mb-4 bg-gray-900 p-3 rounded border border-gray-700">
+                            
                             <label class="block text-xs font-bold text-gray-400 mb-2"><i class="fa-solid fa-display mr-1"></i> Resolusi Perekaman & Kamera</label>
                             <select id="resolutionSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3">
                                 <option value="480">SD (854x480) - Super Ringan</option>
                                 <option value="720" selected>HD (1280x720) - Standar Mulus</option>
                                 <option value="1080">Full HD (1920x1080) - Kualitas Tinggi</option>
                                 <option value="2160">4K (3840x2160) - Awas HP Panas!</option>
+                            </select>
+
+                            <label class="block text-xs font-bold text-gray-400 mb-2 mt-3"><i class="fa-solid fa-microphone mr-1"></i> Pilih Mikrofon (Audio Input)</label>
+                            <select id="audioInputSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3">
+                                <option value="default">Default (Bawaan HP)</option>
                             </select>
 
                             <label class="flex justify-between text-xs font-bold text-gray-400 mb-2">
@@ -235,7 +241,7 @@
                         </div>
 
                         <div class="mb-4 border-t border-gray-700 pt-4">
-                            <label class="block text-xs font-medium text-gray-400 mb-2">Timer Kajian (Countup) - HH:MM:SS</label>
+                            <label class="block text-xs font-medium text-gray-400 mb-2">Timer Kajian (Countup)</label>
                             <div class="flex flex-wrap gap-2 items-center">
                                 <button id="btnToggleTimer" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold transition flex-1 sm:flex-none">
                                     <i class="fa-solid fa-play mr-1"></i> Mulai Timer
@@ -269,11 +275,11 @@
                             </div>
                     </div>
 
-                    <div class="panel-card">
-                        <h2 class="text-lg font-semibold mb-4 border-b border-gray-600 pb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Pengaturan Transisi</h2>
+                    <div class="panel-card pb-10">
+                        <h2 class="text-lg font-semibold mb-4 border-b border-gray-600 pb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Transisi</h2>
                         <div class="mb-5">
                             <label class="flex justify-between text-sm font-medium text-gray-400 mb-2">
-                                <span>Pindah Scene (Fade to Black)</span>
+                                <span>Pindah Scene (Fade)</span>
                                 <span id="lblSceneSpeed" class="text-blue-400 font-bold">Normal</span>
                             </label>
                             <div class="flex items-center gap-3">
@@ -330,38 +336,24 @@
         const btnSwitchModeV16 = document.getElementById('btnSwitchModeV16');
         const statusBadgeV16 = document.getElementById('statusBadgeV16');
 
-        // Fungsi Ganti Mode (Menyimpan Pilihan di HP)
         function switchMode(mode) {
             localStorage.setItem('obsUiMode', mode);
             if(mode === 'v16') {
-                body.classList.remove('mode-v15');
-                body.classList.add('mode-v16');
-                btnSwitchModeV16.style.display = 'flex';
-                statusBadgeV16.style.display = 'block';
+                body.classList.remove('mode-v15'); body.classList.add('mode-v16');
+                btnSwitchModeV16.style.display = 'flex'; statusBadgeV16.style.display = 'block';
                 panelContainer.classList.remove('open');
             } else {
-                body.classList.remove('mode-v16');
-                body.classList.add('mode-v15');
-                btnSwitchModeV16.style.display = 'none';
-                statusBadgeV16.style.display = 'none';
+                body.classList.remove('mode-v16'); body.classList.add('mode-v15');
+                btnSwitchModeV16.style.display = 'none'; statusBadgeV16.style.display = 'none';
             }
-            // Pancing resize agar kanvas menyesuaikan bentuk
             setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
         }
 
-        // Cek ingatan HP saat pertama kali buka web
         const savedMode = localStorage.getItem('obsUiMode') || 'v15';
         switchMode(savedMode);
 
-        // Buka / Tutup Panel Khusus Mode V16
-        btnToggleMenu.addEventListener('click', () => {
-            panelContainer.classList.add('open');
-            btnToggleMenu.style.display = 'none';
-        });
-        btnCloseMenu.addEventListener('click', () => {
-            panelContainer.classList.remove('open');
-            btnToggleMenu.style.display = 'flex';
-        });
+        btnToggleMenu.addEventListener('click', () => { panelContainer.classList.add('open'); btnToggleMenu.style.display = 'none'; });
+        btnCloseMenu.addEventListener('click', () => { panelContainer.classList.remove('open'); btnToggleMenu.style.display = 'flex'; });
 
         // --- DOM Elements OBS Engine ---
         const canvasContainer = document.getElementById('canvasContainer');
@@ -377,6 +369,38 @@
         const camZoomInput = document.getElementById('camZoomInput');
         const lblCamZoom = document.getElementById('lblCamZoom');
         
+        // --- SELECTOR MIKROFON BARU ---
+        const audioInputSelect = document.getElementById('audioInputSelect');
+
+        async function getAudioDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                
+                const currentValue = audioInputSelect.value;
+                audioInputSelect.innerHTML = '<option value="default">Default (Bawaan HP)</option>';
+                
+                let count = 1;
+                audioInputs.forEach(device => {
+                    if(device.deviceId && device.deviceId !== 'default' && device.deviceId !== 'communications') {
+                        const option = document.createElement('option');
+                        option.value = device.deviceId;
+                        // Kalau labelnya masih kosong (belum diizinkan), kita kasih nama generic dulu
+                        option.text = device.label || `Mikrofon Eksternal ${count++}`;
+                        audioInputSelect.appendChild(option);
+                    }
+                });
+                
+                if([...audioInputSelect.options].some(o => o.value === currentValue)) {
+                    audioInputSelect.value = currentValue;
+                }
+            } catch (e) { console.error("Gagal mendata mic:", e); }
+        }
+        
+        // Cek jika ada mic wireless yang baru dicolok/dicabut
+        navigator.mediaDevices.addEventListener('devicechange', getAudioDevices);
+        getAudioDevices(); // Panggil saat web diload
+        
         let overlays = []; let dragTarget = null; let dragOffsetX = 0; let dragOffsetY = 0;
         let isRemoteAction = false; let camZoom = 1.0;
 
@@ -386,13 +410,9 @@
         btnFullscreen.addEventListener('click', () => {
             const elem = document.documentElement;
             if (!document.fullscreenElement) {
-                if (elem.requestFullscreen) elem.requestFullscreen();
-                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-                else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+                if (elem.requestFullscreen) elem.requestFullscreen(); else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen(); else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
             } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                else if (document.msExitFullscreen) document.msExitFullscreen();
+                if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); else if (document.msExitFullscreen) document.msExitFullscreen();
             }
         });
 
@@ -403,7 +423,7 @@
             else { fullscreenIcon.classList.remove('fa-compress'); fullscreenIcon.classList.add('fa-expand'); }
         }
 
-        // --- AUDIO MIXER & VU METER ---
+        // --- AUDIO MIXER ---
         let audioCtx = null; let mixedAudioDest = null; let micNode = null; let mediaNodes = {};
         let analyser = null; let dataArray = null;
         const vuMeterWrapper = document.getElementById('vuMeterWrapper'); const vuMeterBar = document.getElementById('vuMeterBar');
@@ -424,10 +444,7 @@
         let currentCamWidth = 1280; let currentCamHeight = 720;
         function updateResolutionState() {
             const res = parseInt(resolutionSelect.value);
-            if (res === 480) { currentCamWidth = 854; currentCamHeight = 480; }
-            else if (res === 720) { currentCamWidth = 1280; currentCamHeight = 720; }
-            else if (res === 1080) { currentCamWidth = 1920; currentCamHeight = 1080; }
-            else if (res === 2160) { currentCamWidth = 3840; currentCamHeight = 2160; }
+            if (res === 480) { currentCamWidth = 854; currentCamHeight = 480; } else if (res === 720) { currentCamWidth = 1280; currentCamHeight = 720; } else if (res === 1080) { currentCamWidth = 1920; currentCamHeight = 1080; } else if (res === 2160) { currentCamWidth = 3840; currentCamHeight = 2160; }
             canvas.width = currentCamWidth; canvas.height = currentCamHeight;
         }
         updateResolutionState();
@@ -439,12 +456,8 @@
         // --- MEDIA SCENES MP4 ---
         const mediaScenes = { muqoddimah: document.getElementById('muqoddimahVideoSource'), intro: document.getElementById('introVideoSource'), pause: document.getElementById('pauseVideoSource'), outro: document.getElementById('outroVideoSource') };
         window.mediaState = {
-            muqoddimah: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 },
-            intro: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 },
-            pause: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 },
-            outro: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }
+            muqoddimah: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, intro: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, pause: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, outro: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }
         };
-        
         const mediaInputsContainer = document.getElementById('mediaInputsContainer');
         const sceneNames = { muqoddimah: 'MUQODDIMAH', intro: 'INTRO', pause: 'PAUSE', outro: 'OUTRO' };
         
@@ -468,8 +481,7 @@
                         <div class="w-24 flex-shrink-0">
                             <label class="block text-[10px] font-semibold text-gray-400 mb-1">Putar</label>
                             <select id="${key}Playback" class="w-full bg-gray-800 border border-gray-700 text-white rounded text-xs py-1.5 px-1 focus:outline-none focus:border-blue-500 cursor-pointer">
-                                <option value="loop">Looping</option>
-                                <option value="once">1x (Hitam)</option>
+                                <option value="loop">Looping</option><option value="once">1x (Hitam)</option>
                             </select>
                         </div>
                     </div>
@@ -484,19 +496,16 @@
                 if (shouldPlay) { if (vid.src && vid.paused) vid.play().catch(e => console.log("Menunggu play")); } else { if (vid.src && !vid.paused) vid.pause(); }
             });
         }
-
         function applyMediaVisibilityUI(key) {
             const icon = document.getElementById(`${key}EyeIcon`); const btn = document.getElementById(`${key}VisibilityBtn`); const vid = mediaScenes[key];
             if (window.mediaState[key].visible) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); btn.classList.remove('text-gray-600'); btn.classList.add('text-blue-400'); if (vid.src) vid.currentTime = 0; } 
             else { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); btn.classList.remove('text-blue-400'); btn.classList.add('text-gray-600'); }
         }
-
         function applyMediaPipUI(key) {
             const pipBtn = document.getElementById(`${key}PipBtn`); const pipIcon = document.getElementById(`${key}PipIcon`);
             if (window.mediaState[key].pip) { pipIcon.classList.remove('fa-compress'); pipIcon.classList.add('fa-expand'); pipBtn.classList.remove('text-gray-600'); pipBtn.classList.add('text-green-400'); } 
             else { pipIcon.classList.remove('fa-expand'); pipIcon.classList.add('fa-compress'); pipBtn.classList.remove('text-green-400'); pipBtn.classList.add('text-gray-600'); }
         }
-
         window.toggleMediaVisibility = function(key) { initAudio(); window.mediaState[key].visible = !window.mediaState[key].visible; applyMediaVisibilityUI(key); checkPlayback(); if(!isRemoteAction) syncMediaStatesToFirebase(); };
         window.toggleMediaPip = function(key) { window.mediaState[key].pip = !window.mediaState[key].pip; applyMediaPipUI(key); checkPlayback(); if(!isRemoteAction) syncMediaStatesToFirebase(); };
         window.updateMediaFadeSpeed = function(key, val) { window.mediaState[key].fadeSpeed = parseFloat(val); let label = "Normal"; if (val < 0.06) label = "Lambat"; else if (val > 0.15) label = "Cepat"; document.getElementById(`${key}SpeedLbl`).innerText = label; if(!isRemoteAction) syncMediaStatesToFirebase(); };
@@ -689,20 +698,41 @@
             Object.keys(mediaScenes).forEach(key => { const vid = mediaScenes[key]; if (vid.src) { vid.pause(); vid.currentTime = 0; } }); checkPlayback();
         }
 
-        // --- KAMERA START/STOP ---
+        // --- KAMERA START/STOP DENGAN PEMILIHAN MIC ---
         btnStartCam.addEventListener('click', async () => {
             try {
-                initAudio(); const constraints = { video: { facingMode: "environment", width: { ideal: currentCamWidth }, height: { ideal: currentCamHeight } }, audio: { echoCancellation: true, noiseSuppression: true } };
-                camPlaceholderText.innerText = "Mengakses Kamera..."; stream = await navigator.mediaDevices.getUserMedia(constraints); video.srcObject = stream;
+                initAudio(); 
+                
+                // Menerapkan Pilihan Mikrofon
+                const selectedMic = audioInputSelect.value;
+                const audioConstraints = { echoCancellation: true, noiseSuppression: true };
+                if (selectedMic !== 'default') {
+                    audioConstraints.deviceId = { exact: selectedMic };
+                }
+
+                const constraints = { 
+                    video: { facingMode: "environment", width: { ideal: currentCamWidth }, height: { ideal: currentCamHeight } }, 
+                    audio: audioConstraints 
+                };
+
+                camPlaceholderText.innerText = "Mengakses Kamera & Mic...";
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                
                 video.onloadedmetadata = () => {
-                    video.play(); if (stream.getAudioTracks().length > 0 && !micNode) { micNode = audioCtx.createMediaStreamSource(stream); micNode.connect(mixedAudioDest); }
+                    video.play(); 
+                    if (stream.getAudioTracks().length > 0 && !micNode) { micNode = audioCtx.createMediaStreamSource(stream); micNode.connect(mixedAudioDest); }
                     stream.getAudioTracks().forEach(track => { track.enabled = (currentScene === 'live'); });
+                    
                     if (currentScene === 'live') camOffPlaceholder.classList.add('hidden');
                     btnStartCam.classList.add('hidden'); btnStopCam.classList.remove('hidden');
+                    
                     if (!liveSocket) updateStatus(`Kamera Aktif (${video.videoWidth}x${video.videoHeight})`, 'text-green-400', 'fa-video');
                     vuMeterWrapper.classList.remove('hidden'); 
+                    
+                    getAudioDevices(); // Refresh label mic setelah dapet izin
                 };
-            } catch (err) { console.error(err); camPlaceholderText.innerText = "Kamera Belum Aktif"; alert("Gagal akses kamera Bos!"); }
+            } catch (err) { console.error(err); camPlaceholderText.innerText = "Kamera Belum Aktif"; alert("Gagal akses kamera/mic Bos!"); }
         });
 
         btnStopCam.addEventListener('click', () => {
