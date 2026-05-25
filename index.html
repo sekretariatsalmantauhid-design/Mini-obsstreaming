@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini OBS Web Studio - Ultimate Edition</title>
-    <link rel="icon" type="image/png" href="icon-192.png">
+    <link class="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <link rel="manifest" href="manifest.json">
@@ -159,7 +159,7 @@
                                 <option value="1080">Full HD (1920x1080) - Kualitas Tinggi</option>
                             </select>
 
-                            <label class="block text-xs font-bold text-gray-400 mb-2 mt-3"><i class="fa-solid fa-microphone mr-1"></i> Pilih Mikrofon (Wajib Izinkan Audio)</label>
+                            <label class="block text-xs font-bold text-gray-400 mb-2 mt-3"><i class="fa-solid fa-microphone mr-1"></i> Pilih Mikrofon Input</label>
                             <select id="audioInputSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3">
                                 <option value="default">Default (Bawaan HP)</option>
                             </select>
@@ -340,7 +340,7 @@
         }
 
         // =========================================================
-        // FITUR SAKTI: AUTO DETECT MIC WIRELESS & BYPASS MIC BAWAAN
+        // FIX SAKTI: HARD MUTE MIC INTERNAL (ANTI-BOCOR)
         // =========================================================
         const audioInputSelect = document.getElementById('audioInputSelect');
         let knownAudioDevices = [];
@@ -363,7 +363,6 @@
                         option.text = device.label || `Mikrofon Eksternal/Wireless ${count++}`;
                         audioInputSelect.appendChild(option);
 
-                        // Deteksi mic baru (baru dicolok)
                         if (knownAudioDevices.length > 0 && !knownAudioDevices.includes(device.deviceId)) {
                             autoSelectId = device.deviceId; 
                         }
@@ -372,10 +371,9 @@
 
                 knownAudioDevices = audioInputs.map(d => d.deviceId);
 
-                // Logika Auto-Switch Pindah Mic
                 if (autoSelectId) {
                     audioInputSelect.value = autoSelectId;
-                    if (stream) { // Kalo kamera lagi nyala, restart biar mic ganti
+                    if (stream) { 
                         btnStopCam.click();
                         setTimeout(() => btnStartCam.click(), 500);
                     }
@@ -386,9 +384,8 @@
         }
         
         navigator.mediaDevices.addEventListener('devicechange', getAudioDevices);
-        getAudioDevices(); // Panggil saat buka web
+        getAudioDevices();
 
-        // Restart kamera kalau user ganti mic dari dropdown secara manual
         audioInputSelect.addEventListener('change', () => {
             if (stream) {
                 btnStopCam.click();
@@ -402,15 +399,17 @@
             try {
                 initAudio(); 
                 
-                // Menerapkan Kunci Gembok Mic Eksternal (Bypass Mic Bawaan)
                 const selectedMic = audioInputSelect.value;
+                
+                // Konfigurasi audio "Bypass" bawaan Google Chrome Android
                 const audioConstraints = { 
-                    echoCancellation: true, 
-                    noiseSuppression: true 
+                    echoCancellation: false, // WAJIB FALSE: Matikan sistem penyaringan otomatis Android yang suka mic-mix suara
+                    noiseSuppression: false, // WAJIB FALSE: Serahkan peredam bising ke hardware mic wireless asli
+                    autoGainControl: false   // WAJIB FALSE: Cegah HP menaikkan volume mic internal secara otomatis saat suara ustadz pelan
                 };
                 
                 if (selectedMic !== 'default') {
-                    // Ini kunci saktinya: Mematikan paksa mic bawaan dan HANYA mengambil suara dari mic eksternal
+                    // Paksa browser HANYA mengunci device id ini tanpa toleransi fallback
                     audioConstraints.deviceId = { exact: selectedMic };
                 }
 
@@ -425,21 +424,32 @@
                 
                 video.onloadedmetadata = () => {
                     video.play(); 
-                    if (stream.getAudioTracks().length > 0 && !micNode) { micNode = audioCtx.createMediaStreamSource(stream); micNode.connect(mixedAudioDest); }
-                    stream.getAudioTracks().forEach(track => { track.enabled = (currentScene === 'live'); });
+                    
+                    // Pastikan micNode lama bersih total sebelum membuat link audio baru
+                    if (micNode) { micNode.disconnect(); micNode = null; }
+                    
+                    if (stream.getAudioTracks().length > 0) {
+                        // Kunci keras: Pastikan track mic bawaan pabrik HP yang tidak terpilih berstatus DISABLED
+                        stream.getAudioTracks().forEach(track => {
+                            track.enabled = true;
+                        });
+                        micNode = audioCtx.createMediaStreamSource(stream);
+                        micNode.connect(mixedAudioDest); 
+                    }
                     
                     if (currentScene === 'live') camOffPlaceholder.classList.add('hidden');
                     btnStartCam.classList.add('hidden'); btnStopCam.classList.remove('hidden');
                     if (!liveSocket) updateStatus(`Kamera Aktif (${video.videoWidth}x${video.videoHeight})`, 'text-green-400', 'fa-video');
                     vuMeterWrapper.classList.remove('hidden'); 
                     
-                    getAudioDevices(); // Pancing update nama mic kalau baru dikasih izin
+                    getAudioDevices();
                 };
             } catch (err) { console.error(err); camPlaceholderText.innerText = "Kamera Belum Aktif"; alert("Gagal akses kamera/mic Bos!"); }
         });
 
         btnStopCam.addEventListener('click', () => {
-            if (stream) stream.getTracks().forEach(track => track.stop()); stream = null; if (micNode) { micNode.disconnect(); micNode = null; }
+            if (stream) stream.getTracks().forEach(track => track.stop()); stream = null; 
+            if (micNode) { micNode.disconnect(); micNode = null; }
             if (currentScene === 'live') camOffPlaceholder.classList.remove('hidden');
             btnStartCam.classList.remove('hidden'); btnStopCam.classList.add('hidden');
             if (!liveSocket) updateStatus('Standby', 'text-gray-300', 'fa-circle');
@@ -488,8 +498,7 @@
         window.updateMediaFadeSpeed = function(key, val) { window.mediaState[key].fadeSpeed = parseFloat(val); let label = "Normal"; if (val < 0.06) label = "Lambat"; else if (val > 0.15) label = "Cepat"; document.getElementById(`${key}SpeedLbl`).innerText = label; if(!isRemoteAction) syncMediaStatesToFirebase(); };
 
         let animationFrameId = null; let currentScene = 'live'; let transitionState = 0; let transitionAlpha = 0; let pendingScene = null;
-        
-        const btnRecord = document.getElementById('btnRecord'); const btnStopRecord = document.getElementById('btnStopRecord'); const btnStream = document.getElementById('btnStream'); const btnStopStream = document.getElementById('btnStopStream');
+
         const statusBadgeV15 = document.getElementById('statusBadgeV15'); 
         
         const btnToggleTimer = document.getElementById('btnToggleTimer'); const btnResetTimer = document.getElementById('btnResetTimer'); const timerColorInput = document.getElementById('timerColor'); const timerAlphaInput = document.getElementById('timerAlphaInput'); const lblTimerAlpha = document.getElementById('lblTimerAlpha');
@@ -506,7 +515,7 @@
 
         // --- FIREBASE SYNC ---
         function syncSettingsToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/settings'), { res: resolutionSelect.value, sceneSpeed: sceneSpeedInput.value, overlaySpeed: overlaySpeedInput.value, timerColor: timerColorInput.value, timerAlpha: timerAlphaInput.value, rtmpUrl: rtmpInput.value, camZoom: camZoomInput.value }); }
-        function syncOverlaysToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/textOverlays'), overlays.filter(o => o.type === 'text')); localforage.setItem('savedImageOverlays', overlays.filter(o => o.type === 'image')); }
+        function syncOverlaysToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/textOverlays'), overlays.filter(o => o.type === 'text')); saveImagesToIndexedDB(); }
         function syncSceneToFirebase(sceneName) { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/currentScene'), sceneName); }
         function syncMediaStatesToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/mediaStates'), window.mediaState); }
 
@@ -642,14 +651,19 @@
         btnRecord.addEventListener('click', () => {
             initAudio(); const canvasStream = canvas.captureStream(30); if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
             const options = { mimeType: 'video/webm; codecs=vp9' }; try { mediaRecorder = new MediaRecorder(canvasStream, options); } catch (e) { mediaRecorder = new MediaRecorder(canvasStream); }
-            recordedChunks = []; mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); }; mediaRecorder.onstop = saveRecording; mediaRecorder.start(); isRecording = true;
+            recordedChunks = []; mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = saveRecording; mediaRecorder.start(); isRecording = true;
             btnRecord.classList.add('hidden'); btnStream.classList.add('hidden'); btnStopRecord.classList.remove('hidden'); updateStatus('Merekam...', 'text-red-500', 'fa-circle-dot');
         });
         btnStopRecord.addEventListener('click', () => { if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; btnRecord.classList.remove('hidden'); btnStream.classList.remove('hidden'); btnStopRecord.classList.add('hidden'); updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle'); } });
         function saveRecording() { const blob = new Blob(recordedChunks, { type: 'video/webm' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style = 'display: none'; a.href = url; a.download = `Kajian_Pro_${currentCamHeight}p_${new Date().getTime()}.webm`; document.body.appendChild(a); a.click(); setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); }
 
         function formatTime(totalSeconds) { const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0'); const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0'); const s = (totalSeconds % 60).toString().padStart(2, '0'); return `${h}:${m}:${s}`; }
-        btnToggleTimer.addEventListener('click', () => { timerActive = !timerActive; if (timerActive) { lastTimerUpdate = Date.now(); btnToggleTimer.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Timer'; btnToggleTimer.classList.replace('bg-blue-600', 'bg-yellow-600'); btnToggleTimer.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-700'); } else { btnToggleTimer.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Mulai Timer'; btnToggleTimer.classList.replace('bg-yellow-600', 'bg-blue-600'); btnToggleTimer.classList.replace('hover:bg-yellow-700', 'hover:bg-blue-700'); } });
+        btnToggleTimer.addEventListener('click', () => {
+            timerActive = !timerActive;
+            if (timerActive) { lastTimerUpdate = Date.now(); btnToggleTimer.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Timer'; btnToggleTimer.classList.replace('bg-blue-600', 'bg-yellow-600'); btnToggleTimer.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-700'); } 
+            else { btnToggleTimer.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Mulai Timer'; btnToggleTimer.classList.replace('bg-yellow-600', 'bg-blue-600'); btnToggleTimer.classList.replace('hover:bg-yellow-700', 'hover:bg-blue-700'); }
+        });
         btnResetTimer.addEventListener('click', () => { timerSeconds = 0; if (!timerActive) drawFrame(); });
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => {}); }); }
