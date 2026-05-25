@@ -52,7 +52,7 @@
         body.mode-v16 #appHeader { display: none; }
         body.mode-v16 #mainLayout { display: block; width: 100vw; height: 100vh; padding: 0; margin: 0; overflow: hidden; position: relative; }
         body.mode-v16 #canvasWrapper { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; border: none; border-radius: 0; }
-        body.mode-v16 #canvasWrapper #outputCanvas { object-fit: cover; } /* Supaya full layar */
+        body.mode-v16 #canvasWrapper #outputCanvas { object-fit: cover; }
         body.mode-v16 #panelWrapper { position: absolute; inset: 0; z-index: 40; pointer-events: none; display: flex; justify-content: flex-end; overflow: hidden; padding: 0; }
         body.mode-v16 #panelContainer { width: 400px; max-width: 100%; height: 100%; background-color: rgba(17, 24, 39, 0.9); backdrop-filter: blur(10px); border-left: 1px solid #374151; pointer-events: auto; display: flex; flex-direction: column; gap: 0; transform: translateX(100%); transition: transform 0.3s ease; }
         body.mode-v16 #panelContainer.open { transform: translateX(0); }
@@ -139,21 +139,11 @@
                     <div class="panel-card">
                         <h2 class="text-lg font-semibold mb-3 border-b border-gray-600 pb-2"><i class="fa-solid fa-layer-group mr-2"></i>Pilih Scene</h2>
                         <div class="flex flex-col gap-2">
-                            <button onclick="changeScene('muqoddimah')" id="btnSceneMuqoddimah" class="scene-btn w-full">
-                                <i class="fa-solid fa-book-open w-6 text-center mr-2"></i>Muqoddimah
-                            </button>
-                            <button onclick="changeScene('intro')" id="btnSceneIntro" class="scene-btn w-full">
-                                <i class="fa-solid fa-hourglass-start w-6 text-center mr-2"></i>Intro
-                            </button>
-                            <button onclick="changeScene('live')" id="btnSceneLive" class="scene-btn active w-full">
-                                <i class="fa-solid fa-camera w-6 text-center mr-2"></i>Live Camera
-                            </button>
-                            <button onclick="changeScene('pause')" id="btnScenePause" class="scene-btn w-full">
-                                <i class="fa-solid fa-pause w-6 text-center mr-2"></i>Pause
-                            </button>
-                            <button onclick="changeScene('outro')" id="btnSceneOutro" class="scene-btn w-full">
-                                <i class="fa-solid fa-flag-checkered w-6 text-center mr-2"></i>Outro
-                            </button>
+                            <button onclick="changeScene('muqoddimah')" id="btnSceneMuqoddimah" class="scene-btn w-full"><i class="fa-solid fa-book-open w-6 text-center mr-2"></i>Muqoddimah</button>
+                            <button onclick="changeScene('intro')" id="btnSceneIntro" class="scene-btn w-full"><i class="fa-solid fa-hourglass-start w-6 text-center mr-2"></i>Intro</button>
+                            <button onclick="changeScene('live')" id="btnSceneLive" class="scene-btn active w-full"><i class="fa-solid fa-camera w-6 text-center mr-2"></i>Live Camera</button>
+                            <button onclick="changeScene('pause')" id="btnScenePause" class="scene-btn w-full"><i class="fa-solid fa-pause w-6 text-center mr-2"></i>Pause</button>
+                            <button onclick="changeScene('outro')" id="btnSceneOutro" class="scene-btn w-full"><i class="fa-solid fa-flag-checkered w-6 text-center mr-2"></i>Outro</button>
                         </div>
                     </div>
 
@@ -162,15 +152,14 @@
                         
                         <div class="mb-4 bg-gray-900 p-3 rounded border border-gray-700">
                             
-                            <label class="block text-xs font-bold text-gray-400 mb-2"><i class="fa-solid fa-display mr-1"></i> Resolusi Perekaman & Kamera</label>
+                            <label class="block text-xs font-bold text-gray-400 mb-2"><i class="fa-solid fa-display mr-1"></i> Resolusi Kamera</label>
                             <select id="resolutionSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3">
                                 <option value="480">SD (854x480) - Super Ringan</option>
                                 <option value="720" selected>HD (1280x720) - Standar Mulus</option>
                                 <option value="1080">Full HD (1920x1080) - Kualitas Tinggi</option>
-                                <option value="2160">4K (3840x2160) - Awas HP Panas!</option>
                             </select>
 
-                            <label class="block text-xs font-bold text-gray-400 mb-2 mt-3"><i class="fa-solid fa-microphone mr-1"></i> Pilih Mikrofon (Audio Input)</label>
+                            <label class="block text-xs font-bold text-gray-400 mb-2 mt-3"><i class="fa-solid fa-microphone mr-1"></i> Pilih Mikrofon (Wajib Izinkan Audio)</label>
                             <select id="audioInputSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3">
                                 <option value="default">Default (Bawaan HP)</option>
                             </select>
@@ -187,12 +176,11 @@
 
                             <label class="block text-xs font-bold text-gray-400 mb-2"><i class="fa-solid fa-key mr-1"></i> RTMP URL (Wajib rtmps://)</label>
                             <input type="text" id="rtmpInput" placeholder="rtmps://a.rtmp.youtube.com:443/live2/xxxx" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-3 py-3 focus:outline-none focus:border-blue-500 text-white font-mono">
-                            <p class="text-[10px] text-gray-500 mt-1">*Otomatis tersimpan & sinkron</p>
                         </div>
 
                         <div class="flex gap-3 mb-4">
-                            <button id="btnStartCam" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded font-semibold transition shadow"><i class="fa-solid fa-camera mr-2"></i>Nyalakan Kamera</button>
-                            <button id="btnStopCam" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded font-semibold transition shadow hidden"><i class="fa-solid fa-stop mr-2"></i>Matikan Kamera</button>
+                            <button id="btnStartCam" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded font-semibold transition shadow"><i class="fa-solid fa-camera mr-2"></i>Nyala Kamera</button>
+                            <button id="btnStopCam" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded font-semibold transition shadow hidden"><i class="fa-solid fa-stop mr-2"></i>Mati Kamera</button>
                         </div>
                         
                         <div class="flex gap-2 mb-4">
@@ -232,10 +220,9 @@
                                         <option value="sans-serif">Sans-Serif</option>
                                         <option value="serif">Serif (Formal)</option>
                                         <option value="monospace">Monospace</option>
-                                        <option value="cursive">Cursive (Latin)</option>
                                     </select>
-                                    <input type="color" id="textColor" value="#ffffff" class="w-12 h-11 rounded cursor-pointer border border-gray-600 bg-gray-900 p-1" title="Warna Teks">
-                                    <button id="btnAddText" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded text-sm font-semibold transition"><i class="fa-solid fa-plus"></i> Tambah</button>
+                                    <input type="color" id="textColor" value="#ffffff" class="w-12 h-11 rounded cursor-pointer border border-gray-600 bg-gray-900 p-1">
+                                    <button id="btnAddText" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded text-sm font-semibold transition">Tambah</button>
                                 </div>
                             </div>
                         </div>
@@ -243,24 +230,13 @@
                         <div class="mb-4 border-t border-gray-700 pt-4">
                             <label class="block text-xs font-medium text-gray-400 mb-2">Timer Kajian (Countup)</label>
                             <div class="flex flex-wrap gap-2 items-center">
-                                <button id="btnToggleTimer" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold transition flex-1 sm:flex-none">
-                                    <i class="fa-solid fa-play mr-1"></i> Mulai Timer
-                                </button>
-                                <button id="btnResetTimer" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm font-semibold transition" title="Reset ke 0">
-                                    <i class="fa-solid fa-rotate-left"></i>
-                                </button>
-                                <input type="color" id="timerColor" value="#ffffff" class="w-10 h-9 rounded cursor-pointer border border-gray-600 bg-gray-900 p-1 ml-auto" title="Warna Timer">
+                                <button id="btnToggleTimer" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold transition flex-1 sm:flex-none"><i class="fa-solid fa-play mr-1"></i> Mulai Timer</button>
+                                <button id="btnResetTimer" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm font-semibold transition"><i class="fa-solid fa-rotate-left"></i></button>
+                                <input type="color" id="timerColor" value="#ffffff" class="w-10 h-9 rounded cursor-pointer border border-gray-600 bg-gray-900 p-1 ml-auto">
                             </div>
                             <div class="mt-3">
-                                <label class="flex justify-between text-xs font-medium text-gray-400 mb-1">
-                                    <span>Transparansi Timer</span>
-                                    <span id="lblTimerAlpha" class="text-blue-400 font-bold">100%</span>
-                                </label>
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-regular fa-eye-slash text-gray-500 text-xs"></i>
-                                    <input type="range" id="timerAlphaInput" min="0.1" max="1.0" step="0.1" value="1.0" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                                    <i class="fa-regular fa-eye text-gray-500 text-xs"></i>
-                                </div>
+                                <label class="flex justify-between text-xs font-medium text-gray-400 mb-1"><span>Transparansi Timer</span><span id="lblTimerAlpha" class="text-blue-400 font-bold">100%</span></label>
+                                <div class="flex items-center gap-3"><i class="fa-regular fa-eye-slash text-gray-500 text-xs"></i><input type="range" id="timerAlphaInput" min="0.1" max="1.0" step="0.1" value="1.0" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"><i class="fa-regular fa-eye text-gray-500 text-xs"></i></div>
                             </div>
                         </div>
 
@@ -271,33 +247,18 @@
 
                     <div class="panel-card">
                         <h2 class="text-lg font-semibold mb-4 border-b border-gray-600 pb-2"><i class="fa-solid fa-film mr-2"></i>Media Scene (MP4)</h2>
-                        <div id="mediaInputsContainer" class="space-y-4">
-                            </div>
+                        <div id="mediaInputsContainer" class="space-y-4"></div>
                     </div>
 
                     <div class="panel-card pb-10">
                         <h2 class="text-lg font-semibold mb-4 border-b border-gray-600 pb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Transisi</h2>
                         <div class="mb-5">
-                            <label class="flex justify-between text-sm font-medium text-gray-400 mb-2">
-                                <span>Pindah Scene (Fade)</span>
-                                <span id="lblSceneSpeed" class="text-blue-400 font-bold">Normal</span>
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-tortoise text-gray-500"></i>
-                                <input type="range" id="sceneSpeedInput" min="0.005" max="0.15" step="0.005" value="0.05" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                                <i class="fa-solid fa-bolt text-gray-500"></i>
-                            </div>
+                            <label class="flex justify-between text-sm font-medium text-gray-400 mb-2"><span>Pindah Scene (Fade)</span><span id="lblSceneSpeed" class="text-blue-400 font-bold">Normal</span></label>
+                            <div class="flex items-center gap-3"><i class="fa-solid fa-tortoise text-gray-500"></i><input type="range" id="sceneSpeedInput" min="0.005" max="0.15" step="0.005" value="0.05" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"><i class="fa-solid fa-bolt text-gray-500"></i></div>
                         </div>
                         <div>
-                            <label class="flex justify-between text-sm font-medium text-gray-400 mb-2">
-                                <span>Muncul/Hilang Overlay</span>
-                                <span id="lblOverlaySpeed" class="text-blue-400 font-bold">Normal</span>
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-tortoise text-gray-500"></i>
-                                <input type="range" id="overlaySpeedInput" min="0.01" max="0.3" step="0.01" value="0.1" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                                <i class="fa-solid fa-bolt text-gray-500"></i>
-                            </div>
+                            <label class="flex justify-between text-sm font-medium text-gray-400 mb-2"><span>Muncul/Hilang Overlay</span><span id="lblOverlaySpeed" class="text-blue-400 font-bold">Normal</span></label>
+                            <div class="flex items-center gap-3"><i class="fa-solid fa-tortoise text-gray-500"></i><input type="range" id="overlaySpeedInput" min="0.01" max="0.3" step="0.01" value="0.1" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"><i class="fa-solid fa-bolt text-gray-500"></i></div>
                         </div>
                     </div>
 
@@ -321,109 +282,48 @@
             appId: "1:1028240518505:web:23ee30697836bf5516a1f8"
         };
         
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        
+        const app = initializeApp(firebaseConfig); const db = getDatabase(app);
         window.fbDB = db; window.fbRef = ref; window.fbSet = set; window.fbOnValue = onValue; window.firebaseReady = true;
     </script>
 
     <script>
-        // --- LOGIKA DUAL UI (V15 vs V16) ---
-        const body = document.getElementById('body');
-        const panelContainer = document.getElementById('panelContainer');
-        const btnToggleMenu = document.getElementById('btnToggleMenu');
-        const btnCloseMenu = document.getElementById('btnCloseMenu');
-        const btnSwitchModeV16 = document.getElementById('btnSwitchModeV16');
-        const statusBadgeV16 = document.getElementById('statusBadgeV16');
+        // --- LOGIKA DUAL UI ---
+        const body = document.getElementById('body'); const panelContainer = document.getElementById('panelContainer');
+        const btnToggleMenu = document.getElementById('btnToggleMenu'); const btnCloseMenu = document.getElementById('btnCloseMenu');
+        const btnSwitchModeV16 = document.getElementById('btnSwitchModeV16'); const statusBadgeV16 = document.getElementById('statusBadgeV16');
 
         function switchMode(mode) {
             localStorage.setItem('obsUiMode', mode);
-            if(mode === 'v16') {
-                body.classList.remove('mode-v15'); body.classList.add('mode-v16');
-                btnSwitchModeV16.style.display = 'flex'; statusBadgeV16.style.display = 'block';
-                panelContainer.classList.remove('open');
-            } else {
-                body.classList.remove('mode-v16'); body.classList.add('mode-v15');
-                btnSwitchModeV16.style.display = 'none'; statusBadgeV16.style.display = 'none';
-            }
+            if(mode === 'v16') { body.classList.remove('mode-v15'); body.classList.add('mode-v16'); btnSwitchModeV16.style.display = 'flex'; statusBadgeV16.style.display = 'block'; panelContainer.classList.remove('open'); } 
+            else { body.classList.remove('mode-v16'); body.classList.add('mode-v15'); btnSwitchModeV16.style.display = 'none'; statusBadgeV16.style.display = 'none'; }
             setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
         }
-
-        const savedMode = localStorage.getItem('obsUiMode') || 'v15';
-        switchMode(savedMode);
+        switchMode(localStorage.getItem('obsUiMode') || 'v15');
 
         btnToggleMenu.addEventListener('click', () => { panelContainer.classList.add('open'); btnToggleMenu.style.display = 'none'; });
         btnCloseMenu.addEventListener('click', () => { panelContainer.classList.remove('open'); btnToggleMenu.style.display = 'flex'; });
 
-        // --- DOM Elements OBS Engine ---
-        const canvasContainer = document.getElementById('canvasContainer');
-        const btnFullscreen = document.getElementById('btnFullscreen');
-        const fullscreenIcon = document.getElementById('fullscreenIcon');
-        const video = document.getElementById('videoSource');
-        const canvas = document.getElementById('outputCanvas');
-        const ctx = canvas.getContext('2d');
-        const camOffPlaceholder = document.getElementById('camOffPlaceholder');
-        const camPlaceholderText = document.getElementById('camPlaceholderText');
-        const loadingDB = document.getElementById('loadingDB');
-        const rtmpInput = document.getElementById('rtmpInput');
-        const camZoomInput = document.getElementById('camZoomInput');
-        const lblCamZoom = document.getElementById('lblCamZoom');
+        // --- DOM Elements ---
+        const canvasContainer = document.getElementById('canvasContainer'); const btnFullscreen = document.getElementById('btnFullscreen'); const fullscreenIcon = document.getElementById('fullscreenIcon');
+        const video = document.getElementById('videoSource'); const canvas = document.getElementById('outputCanvas'); const ctx = canvas.getContext('2d');
+        const camOffPlaceholder = document.getElementById('camOffPlaceholder'); const camPlaceholderText = document.getElementById('camPlaceholderText');
+        const loadingDB = document.getElementById('loadingDB'); const rtmpInput = document.getElementById('rtmpInput'); const camZoomInput = document.getElementById('camZoomInput'); const lblCamZoom = document.getElementById('lblCamZoom');
         
-        // --- SELECTOR MIKROFON BARU ---
-        const audioInputSelect = document.getElementById('audioInputSelect');
-
-        async function getAudioDevices() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const audioInputs = devices.filter(device => device.kind === 'audioinput');
-                
-                const currentValue = audioInputSelect.value;
-                audioInputSelect.innerHTML = '<option value="default">Default (Bawaan HP)</option>';
-                
-                let count = 1;
-                audioInputs.forEach(device => {
-                    if(device.deviceId && device.deviceId !== 'default' && device.deviceId !== 'communications') {
-                        const option = document.createElement('option');
-                        option.value = device.deviceId;
-                        // Kalau labelnya masih kosong (belum diizinkan), kita kasih nama generic dulu
-                        option.text = device.label || `Mikrofon Eksternal ${count++}`;
-                        audioInputSelect.appendChild(option);
-                    }
-                });
-                
-                if([...audioInputSelect.options].some(o => o.value === currentValue)) {
-                    audioInputSelect.value = currentValue;
-                }
-            } catch (e) { console.error("Gagal mendata mic:", e); }
-        }
-        
-        // Cek jika ada mic wireless yang baru dicolok/dicabut
-        navigator.mediaDevices.addEventListener('devicechange', getAudioDevices);
-        getAudioDevices(); // Panggil saat web diload
-        
-        let overlays = []; let dragTarget = null; let dragOffsetX = 0; let dragOffsetY = 0;
-        let isRemoteAction = false; let camZoom = 1.0;
+        let overlays = []; let dragTarget = null; let dragOffsetX = 0; let dragOffsetY = 0; let isRemoteAction = false; let camZoom = 1.0;
+        let stream = null; let liveSocket = null; let liveRecorder = null; let mediaRecorder = null; let isRecording = false;
 
         localforage.config({ name: 'MiniObsStudio', storeName: 'mediaFiles' });
 
-        // --- FULLSCREEN LOGIC ---
+        // --- FULLSCREEN ---
         btnFullscreen.addEventListener('click', () => {
             const elem = document.documentElement;
-            if (!document.fullscreenElement) {
-                if (elem.requestFullscreen) elem.requestFullscreen(); else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen(); else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-            } else {
-                if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); else if (document.msExitFullscreen) document.msExitFullscreen();
-            }
+            if (!document.fullscreenElement) { if (elem.requestFullscreen) elem.requestFullscreen(); else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen(); } 
+            else { if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); }
         });
+        document.addEventListener('fullscreenchange', updateFullscreenIcon); document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+        function updateFullscreenIcon() { if (document.fullscreenElement) { fullscreenIcon.classList.remove('fa-expand'); fullscreenIcon.classList.add('fa-compress'); } else { fullscreenIcon.classList.remove('fa-compress'); fullscreenIcon.classList.add('fa-expand'); } }
 
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
-        function updateFullscreenIcon() {
-            if (document.fullscreenElement) { fullscreenIcon.classList.remove('fa-expand'); fullscreenIcon.classList.add('fa-compress'); } 
-            else { fullscreenIcon.classList.remove('fa-compress'); fullscreenIcon.classList.add('fa-expand'); }
-        }
-
-        // --- AUDIO MIXER ---
+        // --- AUDIO MIXER & VU METER ---
         let audioCtx = null; let mixedAudioDest = null; let micNode = null; let mediaNodes = {};
         let analyser = null; let dataArray = null;
         const vuMeterWrapper = document.getElementById('vuMeterWrapper'); const vuMeterBar = document.getElementById('vuMeterBar');
@@ -432,281 +332,85 @@
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext; audioCtx = new AudioContext();
                 mixedAudioDest = audioCtx.createMediaStreamDestination();
-                analyser = audioCtx.createAnalyser(); analyser.fftSize = 256; const bufferLength = analyser.frequencyBinCount; dataArray = new Uint8Array(bufferLength);
+                analyser = audioCtx.createAnalyser(); analyser.fftSize = 256; dataArray = new Uint8Array(analyser.frequencyBinCount);
                 const dummyAudio = new Audio(); dummyAudio.srcObject = mixedAudioDest.stream; const dummySource = audioCtx.createMediaStreamSource(mixedAudioDest.stream); dummySource.connect(analyser);
                 Object.keys(mediaScenes).forEach(key => { const vid = mediaScenes[key]; vid.muted = false; const node = audioCtx.createMediaElementSource(vid); node.connect(mixedAudioDest); mediaNodes[key] = node; });
             }
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // --- RESOLUSI ---
-        const resolutionSelect = document.getElementById('resolutionSelect');
-        let currentCamWidth = 1280; let currentCamHeight = 720;
-        function updateResolutionState() {
-            const res = parseInt(resolutionSelect.value);
-            if (res === 480) { currentCamWidth = 854; currentCamHeight = 480; } else if (res === 720) { currentCamWidth = 1280; currentCamHeight = 720; } else if (res === 1080) { currentCamWidth = 1920; currentCamHeight = 1080; } else if (res === 2160) { currentCamWidth = 3840; currentCamHeight = 2160; }
-            canvas.width = currentCamWidth; canvas.height = currentCamHeight;
-        }
-        updateResolutionState();
-        resolutionSelect.addEventListener('change', () => {
-            if((stream || liveSocket) && !isRemoteAction) { alert("Matikan kamera & Live dulu bos sebelum ganti resolusi."); resolutionSelect.value = currentCamHeight; return; }
-            updateResolutionState(); syncSettingsToFirebase(); 
-        });
+        // =========================================================
+        // FITUR SAKTI: AUTO DETECT MIC WIRELESS & BYPASS MIC BAWAAN
+        // =========================================================
+        const audioInputSelect = document.getElementById('audioInputSelect');
+        let knownAudioDevices = [];
 
-        // --- MEDIA SCENES MP4 ---
-        const mediaScenes = { muqoddimah: document.getElementById('muqoddimahVideoSource'), intro: document.getElementById('introVideoSource'), pause: document.getElementById('pauseVideoSource'), outro: document.getElementById('outroVideoSource') };
-        window.mediaState = {
-            muqoddimah: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, intro: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, pause: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, outro: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }
-        };
-        const mediaInputsContainer = document.getElementById('mediaInputsContainer');
-        const sceneNames = { muqoddimah: 'MUQODDIMAH', intro: 'INTRO', pause: 'PAUSE', outro: 'OUTRO' };
-        
-        Object.keys(mediaScenes).forEach(key => {
-            const html = `
-                <div class="flex flex-col gap-2 bg-gray-900 p-3 rounded border border-gray-700">
-                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                        <label class="text-xs font-bold text-gray-300"><i class="fa-solid fa-film mr-1 text-gray-500"></i> ${sceneNames[key]}</label>
-                        <div>
-                            <button id="${key}PipBtn" onclick="toggleMediaPip('${key}')" class="text-gray-600 hover:text-green-400 transition px-2 mr-1" title="Mode PiP"><i class="fa-solid fa-compress" id="${key}PipIcon"></i></button>
-                            <button id="${key}VisibilityBtn" onclick="toggleMediaVisibility('${key}')" class="text-blue-400 hover:text-blue-300 transition px-2" title="Show/Hide"><i class="fa-solid fa-eye" id="${key}EyeIcon"></i></button>
-                        </div>
-                    </div>
-                    <input type="file" id="${key}Input" accept="video/mp4, video/webm" class="block w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-800 file:text-white border border-gray-700 rounded cursor-pointer">
-                    <p class="text-[10px] text-green-500 mt-1 hidden" id="${key}SavedMark"><i class="fa-solid fa-check"></i> Tersimpan di Gudang</p>
-                    <div class="flex gap-3 items-end mt-1">
-                        <div class="flex-grow">
-                            <label class="flex justify-between text-[10px] font-semibold text-gray-400 mb-1"><span>Kecepatan Muncul</span><span id="${key}SpeedLbl" class="text-blue-400">Normal</span></label>
-                            <input type="range" id="${key}FadeSpeed" min="0.01" max="0.3" step="0.01" value="0.1" class="w-full accent-blue-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer" oninput="updateMediaFadeSpeed('${key}', this.value)">
-                        </div>
-                        <div class="w-24 flex-shrink-0">
-                            <label class="block text-[10px] font-semibold text-gray-400 mb-1">Putar</label>
-                            <select id="${key}Playback" class="w-full bg-gray-800 border border-gray-700 text-white rounded text-xs py-1.5 px-1 focus:outline-none focus:border-blue-500 cursor-pointer">
-                                <option value="loop">Looping</option><option value="once">1x (Hitam)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>`;
-            mediaInputsContainer.insertAdjacentHTML('beforeend', html);
-        });
-
-        function checkPlayback() {
-            Object.keys(mediaScenes).forEach(key => {
-                const vid = mediaScenes[key]; const state = window.mediaState[key]; const isCurrentMainScene = currentScene === key; const isPipInLiveCamera = currentScene === 'live' && state.pip;
-                const shouldPlay = state.visible && (isCurrentMainScene || isPipInLiveCamera);
-                if (shouldPlay) { if (vid.src && vid.paused) vid.play().catch(e => console.log("Menunggu play")); } else { if (vid.src && !vid.paused) vid.pause(); }
-            });
-        }
-        function applyMediaVisibilityUI(key) {
-            const icon = document.getElementById(`${key}EyeIcon`); const btn = document.getElementById(`${key}VisibilityBtn`); const vid = mediaScenes[key];
-            if (window.mediaState[key].visible) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); btn.classList.remove('text-gray-600'); btn.classList.add('text-blue-400'); if (vid.src) vid.currentTime = 0; } 
-            else { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); btn.classList.remove('text-blue-400'); btn.classList.add('text-gray-600'); }
-        }
-        function applyMediaPipUI(key) {
-            const pipBtn = document.getElementById(`${key}PipBtn`); const pipIcon = document.getElementById(`${key}PipIcon`);
-            if (window.mediaState[key].pip) { pipIcon.classList.remove('fa-compress'); pipIcon.classList.add('fa-expand'); pipBtn.classList.remove('text-gray-600'); pipBtn.classList.add('text-green-400'); } 
-            else { pipIcon.classList.remove('fa-expand'); pipIcon.classList.add('fa-compress'); pipBtn.classList.remove('text-green-400'); pipBtn.classList.add('text-gray-600'); }
-        }
-        window.toggleMediaVisibility = function(key) { initAudio(); window.mediaState[key].visible = !window.mediaState[key].visible; applyMediaVisibilityUI(key); checkPlayback(); if(!isRemoteAction) syncMediaStatesToFirebase(); };
-        window.toggleMediaPip = function(key) { window.mediaState[key].pip = !window.mediaState[key].pip; applyMediaPipUI(key); checkPlayback(); if(!isRemoteAction) syncMediaStatesToFirebase(); };
-        window.updateMediaFadeSpeed = function(key, val) { window.mediaState[key].fadeSpeed = parseFloat(val); let label = "Normal"; if (val < 0.06) label = "Lambat"; else if (val > 0.15) label = "Cepat"; document.getElementById(`${key}SpeedLbl`).innerText = label; if(!isRemoteAction) syncMediaStatesToFirebase(); };
-
-        let stream = null; let animationFrameId = null; let currentScene = 'live'; let transitionState = 0; let transitionAlpha = 0; let pendingScene = null;
-        let mediaRecorder = null; let recordedChunks = []; let isRecording = false; let liveSocket = null; let liveRecorder = null;
-
-        const btnStartCam = document.getElementById('btnStartCam'); const btnStopCam = document.getElementById('btnStopCam'); const btnRecord = document.getElementById('btnRecord'); const btnStopRecord = document.getElementById('btnStopRecord'); const btnStream = document.getElementById('btnStream'); const btnStopStream = document.getElementById('btnStopStream');
-        const statusBadgeV15 = document.getElementById('statusBadgeV15'); 
-        
-        const btnToggleTimer = document.getElementById('btnToggleTimer'); const btnResetTimer = document.getElementById('btnResetTimer'); const timerColorInput = document.getElementById('timerColor'); const timerAlphaInput = document.getElementById('timerAlphaInput'); const lblTimerAlpha = document.getElementById('lblTimerAlpha');
-        let timerActive = false; let timerSeconds = 0; let lastTimerUpdate = 0; 
-        const timerOverlay = { type: 'timer', x: 50, y: 50, baseSize: 40, scale: 1, color: timerColorInput.value, alpha: parseFloat(timerAlphaInput.value) };
-        
-        const sceneSpeedInput = document.getElementById('sceneSpeedInput'); const overlaySpeedInput = document.getElementById('overlaySpeedInput');
-        let sceneFadeSpeed = parseFloat(sceneSpeedInput.value); let overlayFadeSpeed = parseFloat(overlaySpeedInput.value);
-
-        rtmpInput.addEventListener('input', () => { if(!isRemoteAction) syncSettingsToFirebase(); });
-        camZoomInput.addEventListener('input', (e) => { camZoom = parseFloat(e.target.value); lblCamZoom.innerText = camZoom.toFixed(1) + 'x'; if(!isRemoteAction) syncSettingsToFirebase(); });
-        sceneSpeedInput.addEventListener('input', (e) => { sceneFadeSpeed = parseFloat(e.target.value); let label = "Normal"; if(sceneFadeSpeed < 0.03) label = "Sangat Lambat"; else if(sceneFadeSpeed < 0.06) label = "Lambat"; else if(sceneFadeSpeed > 0.1) label = "Cepat"; document.getElementById('lblSceneSpeed').innerText = label; if(!isRemoteAction) syncSettingsToFirebase(); });
-        overlaySpeedInput.addEventListener('input', (e) => { overlayFadeSpeed = parseFloat(e.target.value); let label = "Normal"; if(overlayFadeSpeed < 0.05) label = "Sangat Lambat"; else if(overlayFadeSpeed < 0.1) label = "Lambat"; else if(overlayFadeSpeed > 0.2) label = "Cepat"; document.getElementById('lblOverlaySpeed').innerText = label; if(!isRemoteAction) syncSettingsToFirebase(); });
-        timerColorInput.addEventListener('change', () => { timerOverlay.color = timerColorInput.value; if(!isRemoteAction) syncSettingsToFirebase(); });
-        timerAlphaInput.addEventListener('input', (e) => { timerOverlay.alpha = parseFloat(e.target.value); lblTimerAlpha.innerText = Math.round(timerOverlay.alpha * 100) + '%'; if(!isRemoteAction) syncSettingsToFirebase(); });
-
-        // --- FIREBASE SYNC ---
-        function syncSettingsToFirebase() {
-            if (!window.firebaseReady) return;
-            window.fbSet(window.fbRef(window.fbDB, 'studio/settings'), { res: resolutionSelect.value, sceneSpeed: sceneSpeedInput.value, overlaySpeed: overlaySpeedInput.value, timerColor: timerColorInput.value, timerAlpha: timerAlphaInput.value, rtmpUrl: rtmpInput.value, camZoom: camZoomInput.value });
-        }
-        function syncOverlaysToFirebase() {
-            if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/textOverlays'), overlays.filter(o => o.type === 'text'));
-            localforage.setItem('savedImageOverlays', overlays.filter(o => o.type === 'image'));
-        }
-        function syncSceneToFirebase(sceneName) { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/currentScene'), sceneName); }
-        function syncMediaStatesToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/mediaStates'), window.mediaState); }
-
-        function setupRemoteControlReceiver() {
-            if (!window.firebaseReady) { setTimeout(setupRemoteControlReceiver, 500); return; }
-            window.fbOnValue(window.fbRef(window.fbDB, 'studio/settings'), (snapshot) => {
-                const s = snapshot.val();
-                if (s) {
-                    isRemoteAction = true; 
-                    if (s.res && resolutionSelect.value !== s.res && !stream && !liveSocket) { resolutionSelect.value = s.res; updateResolutionState(); }
-                    if (s.sceneSpeed && sceneSpeedInput.value !== s.sceneSpeed) { sceneSpeedInput.value = s.sceneSpeed; sceneSpeedInput.dispatchEvent(new Event('input')); }
-                    if (s.overlaySpeed && overlaySpeedInput.value !== s.overlaySpeed) { overlaySpeedInput.value = s.overlaySpeed; overlaySpeedInput.dispatchEvent(new Event('input')); }
-                    if (s.timerColor && timerColorInput.value !== s.timerColor) { timerColorInput.value = s.timerColor; timerOverlay.color = s.timerColor; }
-                    if (s.timerAlpha && timerAlphaInput.value !== s.timerAlpha) { timerAlphaInput.value = s.timerAlpha; timerAlphaInput.dispatchEvent(new Event('input')); }
-                    if (s.rtmpUrl && rtmpInput.value !== s.rtmpUrl) { rtmpInput.value = s.rtmpUrl; }
-                    if (s.camZoom && camZoomInput.value !== s.camZoom) { camZoomInput.value = s.camZoom; camZoomInput.dispatchEvent(new Event('input')); }
-                    isRemoteAction = false; 
-                }
-            });
-            window.fbOnValue(window.fbRef(window.fbDB, 'studio/currentScene'), (snapshot) => { const remoteScene = snapshot.val(); if (remoteScene && remoteScene !== pendingScene && remoteScene !== currentScene) { isRemoteAction = true; changeScene(remoteScene); isRemoteAction = false; } });
-            window.fbOnValue(window.fbRef(window.fbDB, 'studio/textOverlays'), (snapshot) => { const remoteTexts = snapshot.val() || []; if (dragTarget && dragTarget.type === 'text') return; const imageOverlays = overlays.filter(o => o.type === 'image'); overlays = [...imageOverlays, ...remoteTexts]; renderOverlayListUI(); });
-            window.fbOnValue(window.fbRef(window.fbDB, 'studio/mediaStates'), (snapshot) => {
-                const remoteStates = snapshot.val();
-                if (remoteStates) {
-                    isRemoteAction = true;
-                    Object.keys(remoteStates).forEach(key => {
-                        if(remoteStates[key] && window.mediaState[key]) {
-                            window.mediaState[key].visible = remoteStates[key].visible; applyMediaVisibilityUI(key);
-                            window.mediaState[key].pip = remoteStates[key].pip || false; applyMediaPipUI(key);
-                            window.mediaState[key].fadeSpeed = remoteStates[key].fadeSpeed; const speedInput = document.getElementById(`${key}FadeSpeed`); if(speedInput) speedInput.value = remoteStates[key].fadeSpeed;
-                            window.mediaState[key].playback = remoteStates[key].playback; const selectEl = document.getElementById(`${key}Playback`);
-                            if(selectEl) { selectEl.value = remoteStates[key].playback; if(mediaScenes[key]) mediaScenes[key].loop = (remoteStates[key].playback === 'loop'); }
-                        }
-                    }); checkPlayback(); isRemoteAction = false;
-                }
-            });
-        }
-
-        // --- GUDANG DB LOKAL ---
-        async function loadDatabaseBasement() {
+        async function getAudioDevices() {
             try {
-                for (let key of Object.keys(mediaScenes)) {
-                    const videoBlob = await localforage.getItem(`video_${key}`);
-                    if (videoBlob) { mediaScenes[key].src = URL.createObjectURL(videoBlob); const savedMark = document.getElementById(`${key}SavedMark`); if(savedMark) savedMark.classList.remove('hidden'); }
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                
+                const previousValue = audioInputSelect.value;
+                audioInputSelect.innerHTML = '<option value="default">Default (Bawaan HP)</option>';
+                
+                let autoSelectId = null;
+                let count = 1;
+                
+                audioInputs.forEach(device => {
+                    if(device.deviceId && device.deviceId !== 'default' && device.deviceId !== 'communications') {
+                        const option = document.createElement('option');
+                        option.value = device.deviceId;
+                        option.text = device.label || `Mikrofon Eksternal/Wireless ${count++}`;
+                        audioInputSelect.appendChild(option);
+
+                        // Deteksi mic baru (baru dicolok)
+                        if (knownAudioDevices.length > 0 && !knownAudioDevices.includes(device.deviceId)) {
+                            autoSelectId = device.deviceId; 
+                        }
+                    }
+                });
+
+                knownAudioDevices = audioInputs.map(d => d.deviceId);
+
+                // Logika Auto-Switch Pindah Mic
+                if (autoSelectId) {
+                    audioInputSelect.value = autoSelectId;
+                    if (stream) { // Kalo kamera lagi nyala, restart biar mic ganti
+                        btnStopCam.click();
+                        setTimeout(() => btnStartCam.click(), 500);
+                    }
+                } else if ([...audioInputSelect.options].some(o => o.value === previousValue)) {
+                    audioInputSelect.value = previousValue;
                 }
-                const savedImgOverlays = await localforage.getItem('savedImageOverlays');
-                if (savedImgOverlays && savedImgOverlays.length > 0) {
-                     for (let ov of savedImgOverlays) {
-                         if (ov.blobData) {
-                             const img = new Image(); const objectURL = URL.createObjectURL(ov.blobData);
-                             await new Promise((resolve) => { img.onload = () => { overlays.push({ id: ov.id, type: 'image', name: ov.name, img: img, x: ov.x, y: ov.y, w: ov.w, h: ov.h, scale: ov.scale, visible: ov.visible, alpha: ov.alpha }); resolve(); }; img.src = objectURL; });
-                         }
-                     } renderOverlayListUI();
-                }
-            } catch (err) { console.error("Gagal bongkar gudang:", err); } finally { loadingDB.style.display = 'none'; setupRemoteControlReceiver(); }
+            } catch (e) { console.error("Gagal mendata mic:", e); }
         }
-        window.addEventListener('load', loadDatabaseBasement);
+        
+        navigator.mediaDevices.addEventListener('devicechange', getAudioDevices);
+        getAudioDevices(); // Panggil saat buka web
 
-        async function saveImagesToIndexedDB() {
-            const imgOverlays = overlays.filter(o => o.type === 'image'); const dataToSave = [];
-            for (let ov of imgOverlays) { try { const response = await fetch(ov.img.src); const blob = await response.blob(); dataToSave.push({ id: ov.id, name: ov.name, x: ov.x, y: ov.y, w: ov.w, h: ov.h, scale: ov.scale, visible: ov.visible, alpha: ov.alpha, blobData: blob }); } catch(e) { } }
-            localforage.setItem('savedImageOverlays', dataToSave);
-        }
-
-        Object.keys(mediaScenes).forEach(key => {
-            const input = document.getElementById(`${key}Input`); const select = document.getElementById(`${key}Playback`); const vid = mediaScenes[key];
-            vid.loop = (select.value === 'loop'); select.addEventListener('change', (e) => { vid.loop = (e.target.value === 'loop'); window.mediaState[key].playback = e.target.value; if(!isRemoteAction) syncMediaStatesToFirebase(); });
-            input.addEventListener('change', async (e) => {
-                initAudio(); const file = e.target.files[0];
-                if (file) {
-                    vid.src = URL.createObjectURL(file); checkPlayback();
-                    const savedMark = document.getElementById(`${key}SavedMark`); if(savedMark) { savedMark.classList.remove('hidden'); savedMark.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...'; }
-                    try { await localforage.setItem(`video_${key}`, file); if(savedMark) savedMark.innerHTML = '<i class="fa-solid fa-check"></i> Tersimpan di Gudang Bawah Tanah'; } catch(err) { if(savedMark) savedMark.innerHTML = 'Gagal simpan'; }
-                }
-            });
-        });
-
-        // --- OVERLAYS GAMBAR & TEKS ---
-        const overlayInput = document.getElementById('overlayInput'); const overlayList = document.getElementById('overlayList'); const emptyOverlayMsg = document.getElementById('emptyOverlayMsg');
-        overlayInput.addEventListener('change', (e) => {
-            const file = e.target.files[0]; if (!file) return;
-            const img = new Image(); const objectURL = URL.createObjectURL(file);
-            img.onload = () => {
-                let w = img.width; let h = img.height; if (h > 200) { const ratio = 200 / h; h = 200; w = w * ratio; }
-                overlays.push({ id: Date.now(), type: 'image', name: file.name, img: img, x: canvas.width / 2 - w / 2, y: canvas.height / 2 - h / 2, w: w, h: h, scale: 1, visible: true, alpha: 0.0 });
-                renderOverlayListUI(); saveImagesToIndexedDB(); overlayInput.value = ""; 
-            }; img.src = objectURL;
-        });
-
-        const textInput = document.getElementById('textInput'); const fontSelect = document.getElementById('fontSelect'); const textColor = document.getElementById('textColor'); const btnAddText = document.getElementById('btnAddText'); const btnClearOverlays = document.getElementById('btnClearOverlays');
-        btnAddText.addEventListener('click', () => {
-            const textVal = textInput.value.trim(); if (!textVal) return;
-            const baseSize = 50; ctx.font = `bold ${baseSize}px ${fontSelect.value}`; const textWidth = ctx.measureText(textVal).width;
-            overlays.push({ id: Date.now(), type: 'text', name: textVal, text: textVal, font: fontSelect.value, color: textColor.value, x: canvas.width / 2 - textWidth / 2, y: canvas.height / 2 - baseSize / 2, w: textWidth, h: baseSize, baseSize: baseSize, scale: 1, visible: true, alpha: 0.0 });
-            renderOverlayListUI(); syncOverlaysToFirebase(); textInput.value = ""; 
-        });
-        btnClearOverlays.addEventListener('click', () => { overlays = []; renderOverlayListUI(); syncOverlaysToFirebase(); saveImagesToIndexedDB(); });
-
-        window.toggleOverlay = function(id) { const ov = overlays.find(o => o.id === id); if (ov) { ov.visible = !ov.visible; renderOverlayListUI(); if(ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); } };
-        window.deleteOverlay = function(id) { const ov = overlays.find(o => o.id === id); overlays = overlays.filter(o => o.id !== id); renderOverlayListUI(); if(ov && ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); };
-        window.updateOverlayScale = function(id, scaleVal) { const ov = overlays.find(o => o.id === id); if (ov) { ov.scale = scaleVal; if(ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); } };
-
-        function renderOverlayListUI() {
-            emptyOverlayMsg.style.display = overlays.length === 0 ? 'block' : 'none';
-            Array.from(overlayList.children).forEach(child => { if(child.id !== 'emptyOverlayMsg') child.remove(); });
-            const reversedOverlays = [...overlays].reverse();
-            reversedOverlays.forEach(ov => {
-                const div = document.createElement('div'); div.className = "flex items-center justify-between bg-gray-800 p-3 mb-2 rounded border border-gray-700 shadow-sm";
-                let displayName = ov.name; if(displayName.length > 25) displayName = displayName.substring(0, 25) + '...';
-                const iconType = ov.type === 'text' ? 'fa-font text-blue-400' : 'fa-image text-green-400';
-                div.innerHTML = `
-                    <div class="flex flex-col flex-1 mr-4">
-                        <span class="text-sm font-semibold text-gray-200 mb-2"><i class="fa-solid ${iconType} mr-2"></i> ${displayName}</span>
-                        <input type="range" min="0.2" max="3" step="0.1" value="${ov.scale}" class="w-full accent-blue-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer" oninput="updateOverlayScale(${ov.id}, this.value)">
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="toggleOverlay(${ov.id})" class="${ov.visible ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white w-10 h-10 rounded text-sm transition shadow"><i class="fa-solid ${ov.visible ? 'fa-eye' : 'fa-eye-slash'}"></i></button>
-                        <button onclick="deleteOverlay(${ov.id})" class="bg-red-600 hover:bg-red-700 text-white w-10 h-10 rounded text-sm transition shadow"><i class="fa-solid fa-trash"></i></button>
-                    </div>`;
-                overlayList.appendChild(div);
-            });
-        }
-
-        // --- DRAG LOGIC ---
-        function getCanvasCoords(e) {
-            const rect = canvas.getBoundingClientRect(); let ratioX = canvas.width / rect.width; let ratioY = canvas.height / rect.height;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: (clientX - rect.left) * ratioX, y: (clientY - rect.top) * ratioY };
-        }
-        function handleDragStart(e) {
-            const coords = getCanvasCoords(e);
-            if (timerActive || timerSeconds > 0) {
-                ctx.font = `bold ${timerOverlay.baseSize * timerOverlay.scale}px monospace`; const timerWidth = ctx.measureText(formatTime(timerSeconds)).width; const timerHeight = timerOverlay.baseSize * timerOverlay.scale;
-                if (coords.x >= timerOverlay.x && coords.x <= timerOverlay.x + timerWidth && coords.y >= timerOverlay.y && coords.y <= timerOverlay.y + timerHeight) { dragTarget = timerOverlay; dragOffsetX = coords.x - timerOverlay.x; dragOffsetY = coords.y - timerOverlay.y; if(e.cancelable) e.preventDefault(); return; }
+        // Restart kamera kalau user ganti mic dari dropdown secara manual
+        audioInputSelect.addEventListener('change', () => {
+            if (stream) {
+                btnStopCam.click();
+                setTimeout(() => btnStartCam.click(), 500);
             }
-            for (let i = overlays.length - 1; i >= 0; i--) {
-                const ov = overlays[i]; if (!ov.visible) continue; 
-                let currentW, currentH; if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; } else { ctx.font = `bold ${ov.baseSize * ov.scale}px ${ov.font}`; currentW = ctx.measureText(ov.text).width; currentH = ov.baseSize * ov.scale; }
-                if (coords.x >= ov.x && coords.x <= ov.x + currentW && coords.y >= ov.y && coords.y <= ov.y + currentH) { dragTarget = ov; dragOffsetX = coords.x - ov.x; dragOffsetY = coords.y - ov.y; if(e.cancelable) e.preventDefault(); return; }
-            }
-        }
-        function handleDragMove(e) { if (!dragTarget) return; if(e.cancelable) e.preventDefault(); const coords = getCanvasCoords(e); dragTarget.x = coords.x - dragOffsetX; dragTarget.y = coords.y - dragOffsetY; }
-        function handleDragEnd(e) { if (dragTarget) { if(dragTarget.type === 'text') syncOverlaysToFirebase(); else if(dragTarget.type === 'image') saveImagesToIndexedDB(); } dragTarget = null; }
-        canvas.addEventListener('mousedown', handleDragStart); canvas.addEventListener('mousemove', handleDragMove); window.addEventListener('mouseup', handleDragEnd);
-        canvas.addEventListener('touchstart', handleDragStart, { passive: false }); canvas.addEventListener('touchmove', handleDragMove, { passive: false }); window.addEventListener('touchend', handleDragEnd);
+        });
 
-        window.changeScene = function(scene) {
-            initAudio(); if (currentScene === scene || pendingScene === scene) return; 
-            pendingScene = scene; transitionState = 1; 
-            document.querySelectorAll('.scene-btn').forEach(btn => btn.classList.remove('active')); document.getElementById('btnScene' + scene.charAt(0).toUpperCase() + scene.slice(1)).classList.add('active');
-            if (!isRemoteAction) syncSceneToFirebase(scene);
-        };
-        function executeSceneChange() {
-            currentScene = pendingScene;
-            if (currentScene === 'live' && !stream) camOffPlaceholder.classList.remove('hidden'); else camOffPlaceholder.classList.add('hidden');
-            if (stream) stream.getAudioTracks().forEach(track => { track.enabled = (currentScene === 'live'); });
-            Object.keys(mediaScenes).forEach(key => { const vid = mediaScenes[key]; if (vid.src) { vid.pause(); vid.currentTime = 0; } }); checkPlayback();
-        }
+        const btnStartCam = document.getElementById('btnStartCam'); const btnStopCam = document.getElementById('btnStopCam');
 
-        // --- KAMERA START/STOP DENGAN PEMILIHAN MIC ---
         btnStartCam.addEventListener('click', async () => {
             try {
                 initAudio(); 
                 
-                // Menerapkan Pilihan Mikrofon
+                // Menerapkan Kunci Gembok Mic Eksternal (Bypass Mic Bawaan)
                 const selectedMic = audioInputSelect.value;
-                const audioConstraints = { echoCancellation: true, noiseSuppression: true };
+                const audioConstraints = { 
+                    echoCancellation: true, 
+                    noiseSuppression: true 
+                };
+                
                 if (selectedMic !== 'default') {
+                    // Ini kunci saktinya: Mematikan paksa mic bawaan dan HANYA mengambil suara dari mic eksternal
                     audioConstraints.deviceId = { exact: selectedMic };
                 }
 
@@ -726,11 +430,10 @@
                     
                     if (currentScene === 'live') camOffPlaceholder.classList.add('hidden');
                     btnStartCam.classList.add('hidden'); btnStopCam.classList.remove('hidden');
-                    
                     if (!liveSocket) updateStatus(`Kamera Aktif (${video.videoWidth}x${video.videoHeight})`, 'text-green-400', 'fa-video');
                     vuMeterWrapper.classList.remove('hidden'); 
                     
-                    getAudioDevices(); // Refresh label mic setelah dapet izin
+                    getAudioDevices(); // Pancing update nama mic kalau baru dikasih izin
                 };
             } catch (err) { console.error(err); camPlaceholderText.innerText = "Kamera Belum Aktif"; alert("Gagal akses kamera/mic Bos!"); }
         });
@@ -743,80 +446,181 @@
             camPlaceholderText.innerText = "Kamera Belum Aktif"; vuMeterWrapper.classList.add('hidden'); 
         });
 
-        // Sinkronisasi Tulisan Status di Kedua Mode
-        function updateStatus(text, colorClass, iconClass) { 
-            const html = `<i class="fa-solid ${iconClass} ${colorClass} mr-2 text-[10px]"></i>${text}`;
-            statusBadgeV15.innerHTML = html; statusBadgeV16.innerHTML = html;
+        // --- RESOLUSI ---
+        const resolutionSelect = document.getElementById('resolutionSelect');
+        let currentCamWidth = 1280; let currentCamHeight = 720;
+        function updateResolutionState() {
+            const res = parseInt(resolutionSelect.value);
+            if (res === 480) { currentCamWidth = 854; currentCamHeight = 480; } else if (res === 720) { currentCamWidth = 1280; currentCamHeight = 720; } else if (res === 1080) { currentCamWidth = 1920; currentCamHeight = 1080; }
+            canvas.width = currentCamWidth; canvas.height = currentCamHeight;
+        }
+        updateResolutionState();
+        resolutionSelect.addEventListener('change', () => {
+            if((stream || liveSocket) && !isRemoteAction) { alert("Matikan kamera & Live dulu bos sebelum ganti resolusi."); resolutionSelect.value = currentCamHeight; return; }
+            updateResolutionState(); syncSettingsToFirebase(); 
+        });
+
+        // --- MEDIA SCENES MP4 ---
+        const mediaScenes = { muqoddimah: document.getElementById('muqoddimahVideoSource'), intro: document.getElementById('introVideoSource'), pause: document.getElementById('pauseVideoSource'), outro: document.getElementById('outroVideoSource') };
+        window.mediaState = { muqoddimah: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, intro: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, pause: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 }, outro: { visible: true, alpha: 1.0, fadeSpeed: 0.1, playback: 'loop', pip: false, pipAlpha: 0.0 } };
+        const mediaInputsContainer = document.getElementById('mediaInputsContainer'); const sceneNames = { muqoddimah: 'MUQODDIMAH', intro: 'INTRO', pause: 'PAUSE', outro: 'OUTRO' };
+        
+        Object.keys(mediaScenes).forEach(key => {
+            const html = `
+                <div class="flex flex-col gap-2 bg-gray-900 p-3 rounded border border-gray-700">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <label class="text-xs font-bold text-gray-300"><i class="fa-solid fa-film mr-1 text-gray-500"></i> ${sceneNames[key]}</label>
+                        <div><button id="${key}PipBtn" onclick="toggleMediaPip('${key}')" class="text-gray-600 hover:text-green-400 transition px-2 mr-1"><i class="fa-solid fa-compress" id="${key}PipIcon"></i></button><button id="${key}VisibilityBtn" onclick="toggleMediaVisibility('${key}')" class="text-blue-400 hover:text-blue-300 transition px-2"><i class="fa-solid fa-eye" id="${key}EyeIcon"></i></button></div>
+                    </div>
+                    <input type="file" id="${key}Input" accept="video/mp4, video/webm" class="block w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-800 file:text-white border border-gray-700 rounded cursor-pointer">
+                    <p class="text-[10px] text-green-500 mt-1 hidden" id="${key}SavedMark"><i class="fa-solid fa-check"></i> Tersimpan</p>
+                    <div class="flex gap-3 items-end mt-1"><div class="flex-grow"><label class="flex justify-between text-[10px] font-semibold text-gray-400 mb-1"><span>Kecepatan Muncul</span><span id="${key}SpeedLbl" class="text-blue-400">Normal</span></label><input type="range" id="${key}FadeSpeed" min="0.01" max="0.3" step="0.01" value="0.1" class="w-full accent-blue-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer" oninput="updateMediaFadeSpeed('${key}', this.value)"></div>
+                    <div class="w-24 flex-shrink-0"><label class="block text-[10px] font-semibold text-gray-400 mb-1">Putar</label><select id="${key}Playback" class="w-full bg-gray-800 border border-gray-700 text-white rounded text-xs py-1.5 px-1 focus:outline-none focus:border-blue-500 cursor-pointer"><option value="loop">Loop</option><option value="once">1x</option></select></div></div>
+                </div>`;
+            mediaInputsContainer.insertAdjacentHTML('beforeend', html);
+        });
+
+        function checkPlayback() { Object.keys(mediaScenes).forEach(key => { const vid = mediaScenes[key]; const state = window.mediaState[key]; const isCurrentMainScene = currentScene === key; const isPipInLiveCamera = currentScene === 'live' && state.pip; if (state.visible && (isCurrentMainScene || isPipInLiveCamera)) { if (vid.src && vid.paused) vid.play().catch(e=>{}); } else { if (vid.src && !vid.paused) vid.pause(); } }); }
+        function applyMediaVisibilityUI(key) { const icon = document.getElementById(`${key}EyeIcon`); const btn = document.getElementById(`${key}VisibilityBtn`); const vid = mediaScenes[key]; if (window.mediaState[key].visible) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); btn.classList.remove('text-gray-600'); btn.classList.add('text-blue-400'); if (vid.src) vid.currentTime = 0; } else { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); btn.classList.remove('text-blue-400'); btn.classList.add('text-gray-600'); } }
+        function applyMediaPipUI(key) { const pipBtn = document.getElementById(`${key}PipBtn`); const pipIcon = document.getElementById(`${key}PipIcon`); if (window.mediaState[key].pip) { pipIcon.classList.remove('fa-compress'); pipIcon.classList.add('fa-expand'); pipBtn.classList.remove('text-gray-600'); pipBtn.classList.add('text-green-400'); } else { pipIcon.classList.remove('fa-expand'); pipIcon.classList.add('fa-compress'); pipBtn.classList.remove('text-green-400'); pipBtn.classList.add('text-gray-600'); } }
+        window.toggleMediaVisibility = function(key) { initAudio(); window.mediaState[key].visible = !window.mediaState[key].visible; applyMediaVisibilityUI(key); checkPlayback(); if(!isRemoteAction) syncMediaStatesToFirebase(); };
+        window.toggleMediaPip = function(key) { window.mediaState[key].pip = !window.mediaState[key].pip; applyMediaPipUI(key); checkPlayback(); if(!isRemoteAction) syncMediaStatesToFirebase(); };
+        window.updateMediaFadeSpeed = function(key, val) { window.mediaState[key].fadeSpeed = parseFloat(val); let label = "Normal"; if (val < 0.06) label = "Lambat"; else if (val > 0.15) label = "Cepat"; document.getElementById(`${key}SpeedLbl`).innerText = label; if(!isRemoteAction) syncMediaStatesToFirebase(); };
+
+        let animationFrameId = null; let currentScene = 'live'; let transitionState = 0; let transitionAlpha = 0; let pendingScene = null;
+        
+        const btnRecord = document.getElementById('btnRecord'); const btnStopRecord = document.getElementById('btnStopRecord'); const btnStream = document.getElementById('btnStream'); const btnStopStream = document.getElementById('btnStopStream');
+        const statusBadgeV15 = document.getElementById('statusBadgeV15'); 
+        
+        const btnToggleTimer = document.getElementById('btnToggleTimer'); const btnResetTimer = document.getElementById('btnResetTimer'); const timerColorInput = document.getElementById('timerColor'); const timerAlphaInput = document.getElementById('timerAlphaInput'); const lblTimerAlpha = document.getElementById('lblTimerAlpha');
+        let timerActive = false; let timerSeconds = 0; let lastTimerUpdate = 0; const timerOverlay = { type: 'timer', x: 50, y: 50, baseSize: 40, scale: 1, color: timerColorInput.value, alpha: parseFloat(timerAlphaInput.value) };
+        
+        const sceneSpeedInput = document.getElementById('sceneSpeedInput'); const overlaySpeedInput = document.getElementById('overlaySpeedInput'); let sceneFadeSpeed = parseFloat(sceneSpeedInput.value); let overlayFadeSpeed = parseFloat(overlaySpeedInput.value);
+
+        rtmpInput.addEventListener('input', () => { if(!isRemoteAction) syncSettingsToFirebase(); });
+        camZoomInput.addEventListener('input', (e) => { camZoom = parseFloat(e.target.value); lblCamZoom.innerText = camZoom.toFixed(1) + 'x'; if(!isRemoteAction) syncSettingsToFirebase(); });
+        sceneSpeedInput.addEventListener('input', (e) => { sceneFadeSpeed = parseFloat(e.target.value); let label = "Normal"; if(sceneFadeSpeed < 0.03) label = "Lambat"; else if(sceneFadeSpeed > 0.1) label = "Cepat"; document.getElementById('lblSceneSpeed').innerText = label; if(!isRemoteAction) syncSettingsToFirebase(); });
+        overlaySpeedInput.addEventListener('input', (e) => { overlayFadeSpeed = parseFloat(e.target.value); let label = "Normal"; if(overlayFadeSpeed < 0.05) label = "Lambat"; else if(overlayFadeSpeed > 0.2) label = "Cepat"; document.getElementById('lblOverlaySpeed').innerText = label; if(!isRemoteAction) syncSettingsToFirebase(); });
+        timerColorInput.addEventListener('change', () => { timerOverlay.color = timerColorInput.value; if(!isRemoteAction) syncSettingsToFirebase(); });
+        timerAlphaInput.addEventListener('input', (e) => { timerOverlay.alpha = parseFloat(e.target.value); lblTimerAlpha.innerText = Math.round(timerOverlay.alpha * 100) + '%'; if(!isRemoteAction) syncSettingsToFirebase(); });
+
+        // --- FIREBASE SYNC ---
+        function syncSettingsToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/settings'), { res: resolutionSelect.value, sceneSpeed: sceneSpeedInput.value, overlaySpeed: overlaySpeedInput.value, timerColor: timerColorInput.value, timerAlpha: timerAlphaInput.value, rtmpUrl: rtmpInput.value, camZoom: camZoomInput.value }); }
+        function syncOverlaysToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/textOverlays'), overlays.filter(o => o.type === 'text')); localforage.setItem('savedImageOverlays', overlays.filter(o => o.type === 'image')); }
+        function syncSceneToFirebase(sceneName) { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/currentScene'), sceneName); }
+        function syncMediaStatesToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/mediaStates'), window.mediaState); }
+
+        function setupRemoteControlReceiver() {
+            if (!window.firebaseReady) { setTimeout(setupRemoteControlReceiver, 500); return; }
+            window.fbOnValue(window.fbRef(window.fbDB, 'studio/settings'), (snapshot) => {
+                const s = snapshot.val(); if (s) {
+                    isRemoteAction = true; 
+                    if (s.res && resolutionSelect.value !== s.res && !stream && !liveSocket) { resolutionSelect.value = s.res; updateResolutionState(); }
+                    if (s.sceneSpeed && sceneSpeedInput.value !== s.sceneSpeed) { sceneSpeedInput.value = s.sceneSpeed; sceneSpeedInput.dispatchEvent(new Event('input')); }
+                    if (s.overlaySpeed && overlaySpeedInput.value !== s.overlaySpeed) { overlaySpeedInput.value = s.overlaySpeed; overlaySpeedInput.dispatchEvent(new Event('input')); }
+                    if (s.timerColor && timerColorInput.value !== s.timerColor) { timerColorInput.value = s.timerColor; timerOverlay.color = s.timerColor; }
+                    if (s.timerAlpha && timerAlphaInput.value !== s.timerAlpha) { timerAlphaInput.value = s.timerAlpha; timerAlphaInput.dispatchEvent(new Event('input')); }
+                    if (s.rtmpUrl && rtmpInput.value !== s.rtmpUrl) { rtmpInput.value = s.rtmpUrl; }
+                    if (s.camZoom && camZoomInput.value !== s.camZoom) { camZoomInput.value = s.camZoom; camZoomInput.dispatchEvent(new Event('input')); }
+                    isRemoteAction = false; 
+                }
+            });
+            window.fbOnValue(window.fbRef(window.fbDB, 'studio/currentScene'), (snapshot) => { const remoteScene = snapshot.val(); if (remoteScene && remoteScene !== pendingScene && remoteScene !== currentScene) { isRemoteAction = true; changeScene(remoteScene); isRemoteAction = false; } });
+            window.fbOnValue(window.fbRef(window.fbDB, 'studio/textOverlays'), (snapshot) => { const remoteTexts = snapshot.val() || []; if (dragTarget && dragTarget.type === 'text') return; const imageOverlays = overlays.filter(o => o.type === 'image'); overlays = [...imageOverlays, ...remoteTexts]; renderOverlayListUI(); });
+            window.fbOnValue(window.fbRef(window.fbDB, 'studio/mediaStates'), (snapshot) => {
+                const remoteStates = snapshot.val(); if (remoteStates) {
+                    isRemoteAction = true; Object.keys(remoteStates).forEach(key => {
+                        if(remoteStates[key] && window.mediaState[key]) {
+                            window.mediaState[key].visible = remoteStates[key].visible; applyMediaVisibilityUI(key); window.mediaState[key].pip = remoteStates[key].pip || false; applyMediaPipUI(key);
+                            window.mediaState[key].fadeSpeed = remoteStates[key].fadeSpeed; const speedInput = document.getElementById(`${key}FadeSpeed`); if(speedInput) speedInput.value = remoteStates[key].fadeSpeed;
+                            window.mediaState[key].playback = remoteStates[key].playback; const selectEl = document.getElementById(`${key}Playback`); if(selectEl) { selectEl.value = remoteStates[key].playback; if(mediaScenes[key]) mediaScenes[key].loop = (remoteStates[key].playback === 'loop'); }
+                        }
+                    }); checkPlayback(); isRemoteAction = false;
+                }
+            });
         }
 
-        function updateVuMeter() {
-            if (analyser && dataArray && stream && currentScene === 'live') {
-                analyser.getByteFrequencyData(dataArray); let sum = 0; for(let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-                let percent = ((sum / dataArray.length) / 128) * 100; if (percent > 100) percent = 100; vuMeterBar.style.width = percent + '%';
-            } else { vuMeterBar.style.width = '0%'; }
+        // --- GUDANG DB LOKAL ---
+        async function loadDatabaseBasement() {
+            try {
+                for (let key of Object.keys(mediaScenes)) { const videoBlob = await localforage.getItem(`video_${key}`); if (videoBlob) { mediaScenes[key].src = URL.createObjectURL(videoBlob); const savedMark = document.getElementById(`${key}SavedMark`); if(savedMark) savedMark.classList.remove('hidden'); } }
+                const savedImgOverlays = await localforage.getItem('savedImageOverlays');
+                if (savedImgOverlays && savedImgOverlays.length > 0) {
+                     for (let ov of savedImgOverlays) { if (ov.blobData) { const img = new Image(); const objectURL = URL.createObjectURL(ov.blobData); await new Promise((resolve) => { img.onload = () => { overlays.push({ id: ov.id, type: 'image', name: ov.name, img: img, x: ov.x, y: ov.y, w: ov.w, h: ov.h, scale: ov.scale, visible: ov.visible, alpha: ov.alpha }); resolve(); }; img.src = objectURL; }); } } renderOverlayListUI();
+                }
+            } catch (err) {} finally { loadingDB.style.display = 'none'; setupRemoteControlReceiver(); }
         }
+        window.addEventListener('load', loadDatabaseBasement);
+
+        async function saveImagesToIndexedDB() {
+            const imgOverlays = overlays.filter(o => o.type === 'image'); const dataToSave = [];
+            for (let ov of imgOverlays) { try { const response = await fetch(ov.img.src); const blob = await response.blob(); dataToSave.push({ id: ov.id, name: ov.name, x: ov.x, y: ov.y, w: ov.w, h: ov.h, scale: ov.scale, visible: ov.visible, alpha: ov.alpha, blobData: blob }); } catch(e) { } }
+            localforage.setItem('savedImageOverlays', dataToSave);
+        }
+
+        Object.keys(mediaScenes).forEach(key => {
+            const input = document.getElementById(`${key}Input`); const select = document.getElementById(`${key}Playback`); const vid = mediaScenes[key]; vid.loop = (select.value === 'loop');
+            select.addEventListener('change', (e) => { vid.loop = (e.target.value === 'loop'); window.mediaState[key].playback = e.target.value; if(!isRemoteAction) syncMediaStatesToFirebase(); });
+            input.addEventListener('change', async (e) => { initAudio(); const file = e.target.files[0]; if (file) { vid.src = URL.createObjectURL(file); checkPlayback(); const savedMark = document.getElementById(`${key}SavedMark`); if(savedMark) { savedMark.classList.remove('hidden'); savedMark.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...'; } try { await localforage.setItem(`video_${key}`, file); if(savedMark) savedMark.innerHTML = '<i class="fa-solid fa-check"></i> Tersimpan'; } catch(err) {} } });
+        });
+
+        // --- OVERLAYS GAMBAR & TEKS ---
+        const overlayInput = document.getElementById('overlayInput'); const overlayList = document.getElementById('overlayList'); const emptyOverlayMsg = document.getElementById('emptyOverlayMsg');
+        overlayInput.addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return; const img = new Image(); const objectURL = URL.createObjectURL(file);
+            img.onload = () => { let w = img.width; let h = img.height; if (h > 200) { const ratio = 200 / h; h = 200; w = w * ratio; } overlays.push({ id: Date.now(), type: 'image', name: file.name, img: img, x: canvas.width / 2 - w / 2, y: canvas.height / 2 - h / 2, w: w, h: h, scale: 1, visible: true, alpha: 0.0 }); renderOverlayListUI(); saveImagesToIndexedDB(); overlayInput.value = ""; }; img.src = objectURL;
+        });
+
+        const textInput = document.getElementById('textInput'); const fontSelect = document.getElementById('fontSelect'); const textColor = document.getElementById('textColor'); const btnAddText = document.getElementById('btnAddText'); const btnClearOverlays = document.getElementById('btnClearOverlays');
+        btnAddText.addEventListener('click', () => { const textVal = textInput.value.trim(); if (!textVal) return; const baseSize = 50; ctx.font = `bold ${baseSize}px ${fontSelect.value}`; const textWidth = ctx.measureText(textVal).width; overlays.push({ id: Date.now(), type: 'text', name: textVal, text: textVal, font: fontSelect.value, color: textColor.value, x: canvas.width / 2 - textWidth / 2, y: canvas.height / 2 - baseSize / 2, w: textWidth, h: baseSize, baseSize: baseSize, scale: 1, visible: true, alpha: 0.0 }); renderOverlayListUI(); syncOverlaysToFirebase(); textInput.value = ""; });
+        btnClearOverlays.addEventListener('click', () => { overlays = []; renderOverlayListUI(); syncOverlaysToFirebase(); saveImagesToIndexedDB(); });
+
+        window.toggleOverlay = function(id) { const ov = overlays.find(o => o.id === id); if (ov) { ov.visible = !ov.visible; renderOverlayListUI(); if(ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); } };
+        window.deleteOverlay = function(id) { const ov = overlays.find(o => o.id === id); overlays = overlays.filter(o => o.id !== id); renderOverlayListUI(); if(ov && ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); };
+        window.updateOverlayScale = function(id, scaleVal) { const ov = overlays.find(o => o.id === id); if (ov) { ov.scale = scaleVal; if(ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); } };
+
+        function renderOverlayListUI() {
+            emptyOverlayMsg.style.display = overlays.length === 0 ? 'block' : 'none'; Array.from(overlayList.children).forEach(child => { if(child.id !== 'emptyOverlayMsg') child.remove(); });
+            const reversedOverlays = [...overlays].reverse();
+            reversedOverlays.forEach(ov => {
+                const div = document.createElement('div'); div.className = "flex items-center justify-between bg-gray-800 p-3 mb-2 rounded border border-gray-700 shadow-sm";
+                let displayName = ov.name; if(displayName.length > 25) displayName = displayName.substring(0, 25) + '...'; const iconType = ov.type === 'text' ? 'fa-font text-blue-400' : 'fa-image text-green-400';
+                div.innerHTML = `<div class="flex flex-col flex-1 mr-4"><span class="text-sm font-semibold text-gray-200 mb-2"><i class="fa-solid ${iconType} mr-2"></i> ${displayName}</span><input type="range" min="0.2" max="3" step="0.1" value="${ov.scale}" class="w-full accent-blue-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer" oninput="updateOverlayScale(${ov.id}, this.value)"></div><div class="flex gap-2"><button onclick="toggleOverlay(${ov.id})" class="${ov.visible ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white w-10 h-10 rounded text-sm transition shadow"><i class="fa-solid ${ov.visible ? 'fa-eye' : 'fa-eye-slash'}"></i></button><button onclick="deleteOverlay(${ov.id})" class="bg-red-600 hover:bg-red-700 text-white w-10 h-10 rounded text-sm transition shadow"><i class="fa-solid fa-trash"></i></button></div>`; overlayList.appendChild(div);
+            });
+        }
+
+        // --- DRAG LOGIC ---
+        function getCanvasCoords(e) { const rect = canvas.getBoundingClientRect(); let ratioX = canvas.width / rect.width; let ratioY = canvas.height / rect.height; const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * ratioX, y: (clientY - rect.top) * ratioY }; }
+        function handleDragStart(e) {
+            const coords = getCanvasCoords(e);
+            if (timerActive || timerSeconds > 0) { ctx.font = `bold ${timerOverlay.baseSize * timerOverlay.scale}px monospace`; const timerWidth = ctx.measureText(formatTime(timerSeconds)).width; const timerHeight = timerOverlay.baseSize * timerOverlay.scale; if (coords.x >= timerOverlay.x && coords.x <= timerOverlay.x + timerWidth && coords.y >= timerOverlay.y && coords.y <= timerOverlay.y + timerHeight) { dragTarget = timerOverlay; dragOffsetX = coords.x - timerOverlay.x; dragOffsetY = coords.y - timerOverlay.y; if(e.cancelable) e.preventDefault(); return; } }
+            for (let i = overlays.length - 1; i >= 0; i--) { const ov = overlays[i]; if (!ov.visible) continue; let currentW, currentH; if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; } else { ctx.font = `bold ${ov.baseSize * ov.scale}px ${ov.font}`; currentW = ctx.measureText(ov.text).width; currentH = ov.baseSize * ov.scale; } if (coords.x >= ov.x && coords.x <= ov.x + currentW && coords.y >= ov.y && coords.y <= ov.y + currentH) { dragTarget = ov; dragOffsetX = coords.x - ov.x; dragOffsetY = coords.y - ov.y; if(e.cancelable) e.preventDefault(); return; } }
+        }
+        function handleDragMove(e) { if (!dragTarget) return; if(e.cancelable) e.preventDefault(); const coords = getCanvasCoords(e); dragTarget.x = coords.x - dragOffsetX; dragTarget.y = coords.y - dragOffsetY; }
+        function handleDragEnd(e) { if (dragTarget) { if(dragTarget.type === 'text') syncOverlaysToFirebase(); else if(dragTarget.type === 'image') saveImagesToIndexedDB(); } dragTarget = null; }
+        canvas.addEventListener('mousedown', handleDragStart); canvas.addEventListener('mousemove', handleDragMove); window.addEventListener('mouseup', handleDragEnd); canvas.addEventListener('touchstart', handleDragStart, { passive: false }); canvas.addEventListener('touchmove', handleDragMove, { passive: false }); window.addEventListener('touchend', handleDragEnd);
+
+        window.changeScene = function(scene) { initAudio(); if (currentScene === scene || pendingScene === scene) return; pendingScene = scene; transitionState = 1; document.querySelectorAll('.scene-btn').forEach(btn => btn.classList.remove('active')); document.getElementById('btnScene' + scene.charAt(0).toUpperCase() + scene.slice(1)).classList.add('active'); if (!isRemoteAction) syncSceneToFirebase(scene); };
+        function executeSceneChange() { currentScene = pendingScene; if (currentScene === 'live' && !stream) camOffPlaceholder.classList.remove('hidden'); else camOffPlaceholder.classList.add('hidden'); if (stream) stream.getAudioTracks().forEach(track => { track.enabled = (currentScene === 'live'); }); Object.keys(mediaScenes).forEach(key => { const vid = mediaScenes[key]; if (vid.src) { vid.pause(); vid.currentTime = 0; } }); checkPlayback(); }
+
+        function updateStatus(text, colorClass, iconClass) { const html = `<i class="fa-solid ${iconClass} ${colorClass} mr-2 text-[10px]"></i>${text}`; statusBadgeV15.innerHTML = html; statusBadgeV16.innerHTML = html; }
+        function updateVuMeter() { if (analyser && dataArray && stream && currentScene === 'live') { analyser.getByteFrequencyData(dataArray); let sum = 0; for(let i = 0; i < dataArray.length; i++) sum += dataArray[i]; let percent = ((sum / dataArray.length) / 128) * 100; if (percent > 100) percent = 100; vuMeterBar.style.width = percent + '%'; } else { vuMeterBar.style.width = '0%'; } }
 
         const drawScene = (sceneId, isBackground) => {
             let sourceElement = null; let stateAlpha = 0.0;
-            if (mediaScenes[sceneId]) {
-                const activeVid = mediaScenes[sceneId]; const playbackSelect = document.getElementById(`${sceneId}Playback`); const state = window.mediaState[sceneId];
-                if (isBackground) { if (state.visible) state.alpha = Math.min(1.0, state.alpha + state.fadeSpeed); else state.alpha = Math.max(0.0, state.alpha - state.fadeSpeed); stateAlpha = state.alpha; } 
-                else { if (state.pip && state.visible) state.pipAlpha = Math.min(1.0, state.pipAlpha + state.fadeSpeed); else state.pipAlpha = Math.max(0.0, state.pipAlpha - state.fadeSpeed); stateAlpha = state.pipAlpha; }
-                if (activeVid.src && !(activeVid.ended && playbackSelect.value === 'once')) sourceElement = activeVid;
-            }
-            if (sourceElement && stateAlpha > 0.0) {
-                ctx.globalAlpha = stateAlpha; let drawWidth = canvas.width; let drawHeight = canvas.height; let drawX = 0; let drawY = 0; let isPipMode = false;
-                if (!isBackground && currentScene === 'live') { isPipMode = true; drawWidth = canvas.width * 0.3; drawHeight = canvas.height * 0.3; drawX = canvas.width - drawWidth - 20; drawY = canvas.height - drawHeight - 20; }
-                if (isPipMode) { ctx.lineWidth = 4; ctx.strokeStyle = "white"; ctx.strokeRect(drawX, drawY, drawWidth, drawHeight); }
-                ctx.drawImage(sourceElement, drawX, drawY, drawWidth, drawHeight); ctx.globalAlpha = 1.0;
-            }
+            if (mediaScenes[sceneId]) { const activeVid = mediaScenes[sceneId]; const playbackSelect = document.getElementById(`${sceneId}Playback`); const state = window.mediaState[sceneId]; if (isBackground) { if (state.visible) state.alpha = Math.min(1.0, state.alpha + state.fadeSpeed); else state.alpha = Math.max(0.0, state.alpha - state.fadeSpeed); stateAlpha = state.alpha; } else { if (state.pip && state.visible) state.pipAlpha = Math.min(1.0, state.pipAlpha + state.fadeSpeed); else state.pipAlpha = Math.max(0.0, state.pipAlpha - state.fadeSpeed); stateAlpha = state.pipAlpha; } if (activeVid.src && !(activeVid.ended && playbackSelect.value === 'once')) sourceElement = activeVid; }
+            if (sourceElement && stateAlpha > 0.0) { ctx.globalAlpha = stateAlpha; let drawWidth = canvas.width; let drawHeight = canvas.height; let drawX = 0; let drawY = 0; let isPipMode = false; if (!isBackground && currentScene === 'live') { isPipMode = true; drawWidth = canvas.width * 0.3; drawHeight = canvas.height * 0.3; drawX = canvas.width - drawWidth - 20; drawY = canvas.height - drawHeight - 20; } if (isPipMode) { ctx.lineWidth = 4; ctx.strokeStyle = "white"; ctx.strokeRect(drawX, drawY, drawWidth, drawHeight); } ctx.drawImage(sourceElement, drawX, drawY, drawWidth, drawHeight); ctx.globalAlpha = 1.0; }
         };
 
-        // --- RENDER UTAMA ---
         function drawFrame() {
             updateVuMeter(); ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            if (currentScene === 'live') {
-                if (stream && !video.paused) {
-                    ctx.globalAlpha = 1.0; const vw = video.videoWidth; const vh = video.videoHeight; const cw = canvas.width; const ch = canvas.height;
-                    if (vw && vh) { const cropW = vw / camZoom; const cropH = vh / camZoom; const cropX = (vw - cropW) / 2; const cropY = (vh - cropH) / 2; ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cw, ch); } else ctx.drawImage(video, 0, 0, cw, ch);
-                }
-            } else if (mediaScenes[currentScene]) drawScene(currentScene, true);
-
+            if (currentScene === 'live') { if (stream && !video.paused) { ctx.globalAlpha = 1.0; const vw = video.videoWidth; const vh = video.videoHeight; const cw = canvas.width; const ch = canvas.height; if (vw && vh) { const cropW = vw / camZoom; const cropH = vh / camZoom; const cropX = (vw - cropW) / 2; const cropY = (vh - cropH) / 2; ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cw, ch); } else ctx.drawImage(video, 0, 0, cw, ch); } } else if (mediaScenes[currentScene]) drawScene(currentScene, true);
             if (currentScene === 'live') { Object.keys(mediaScenes).forEach(key => { const state = window.mediaState[key]; if ((state.pip && state.visible) || state.pipAlpha > 0.0) drawScene(key, false); }); }
-
-            if (transitionState > 0) {
-                if (transitionState === 1) { transitionAlpha = Math.min(1.0, transitionAlpha + sceneFadeSpeed); if (transitionAlpha >= 1.0) { executeSceneChange(); transitionState = 2; } } 
-                else if (transitionState === 2) { transitionAlpha = Math.max(0.0, transitionAlpha - sceneFadeSpeed); if (transitionAlpha <= 0.0) transitionState = 0; }
-                ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-
-            overlays.forEach(ov => {
-                if (ov.visible) ov.alpha = Math.min(1.0, ov.alpha + overlayFadeSpeed); else ov.alpha = Math.max(0.0, ov.alpha - overlayFadeSpeed);
-                if (ov.alpha > 0.0) { 
-                    ctx.globalAlpha = ov.alpha; let currentW, currentH;
-                    if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; ctx.drawImage(ov.img, ov.x, ov.y, currentW, currentH); } 
-                    else if (ov.type === 'text') {
-                        const currentSize = ov.baseSize * ov.scale; ctx.font = `bold ${currentSize}px ${ov.font}`; ctx.fillStyle = ov.color; ctx.textBaseline = 'top'; currentW = ctx.measureText(ov.text).width; currentH = currentSize;
-                        ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; ctx.fillText(ov.text, ov.x, ov.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-                    }
-                    if (ov === dragTarget && ov.visible) { ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(ov.x, ov.y, currentW, currentH); }
-                    ctx.globalAlpha = 1.0; 
-                }
-            });
-
-            if (timerActive || timerSeconds > 0) {
-                if (timerActive) { const now = Date.now(); const diff = Math.floor((now - lastTimerUpdate) / 1000); if (diff > 0) { timerSeconds += diff; lastTimerUpdate = now; } }
-                const timerText = formatTime(timerSeconds); const currentSize = timerOverlay.baseSize * timerOverlay.scale;
-                ctx.globalAlpha = timerOverlay.alpha; ctx.font = `bold ${currentSize}px monospace`; ctx.fillStyle = timerOverlay.color; ctx.textBaseline = 'top';
-                const timerWidth = ctx.measureText(timerText).width; const timerHeight = currentSize;
-                ctx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1; ctx.fillText(timerText, timerOverlay.x, timerOverlay.y);
-                ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.globalAlpha = 1.0; 
-                if (timerOverlay === dragTarget) { ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(timerOverlay.x, timerOverlay.y, timerWidth, timerHeight); }
-            }
+            if (transitionState > 0) { if (transitionState === 1) { transitionAlpha = Math.min(1.0, transitionAlpha + sceneFadeSpeed); if (transitionAlpha >= 1.0) { executeSceneChange(); transitionState = 2; } } else if (transitionState === 2) { transitionAlpha = Math.max(0.0, transitionAlpha - sceneFadeSpeed); if (transitionAlpha <= 0.0) transitionState = 0; } ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            overlays.forEach(ov => { if (ov.visible) ov.alpha = Math.min(1.0, ov.alpha + overlayFadeSpeed); else ov.alpha = Math.max(0.0, ov.alpha - overlayFadeSpeed); if (ov.alpha > 0.0) { ctx.globalAlpha = ov.alpha; let currentW, currentH; if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; ctx.drawImage(ov.img, ov.x, ov.y, currentW, currentH); } else if (ov.type === 'text') { const currentSize = ov.baseSize * ov.scale; ctx.font = `bold ${currentSize}px ${ov.font}`; ctx.fillStyle = ov.color; ctx.textBaseline = 'top'; currentW = ctx.measureText(ov.text).width; currentH = currentSize; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; ctx.fillText(ov.text, ov.x, ov.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; } if (ov === dragTarget && ov.visible) { ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(ov.x, ov.y, currentW, currentH); } ctx.globalAlpha = 1.0; } });
+            if (timerActive || timerSeconds > 0) { if (timerActive) { const now = Date.now(); const diff = Math.floor((now - lastTimerUpdate) / 1000); if (diff > 0) { timerSeconds += diff; lastTimerUpdate = now; } } const timerText = formatTime(timerSeconds); const currentSize = timerOverlay.baseSize * timerOverlay.scale; ctx.globalAlpha = timerOverlay.alpha; ctx.font = `bold ${currentSize}px monospace`; ctx.fillStyle = timerOverlay.color; ctx.textBaseline = 'top'; const timerWidth = ctx.measureText(timerText).width; const timerHeight = currentSize; ctx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1; ctx.fillText(timerText, timerOverlay.x, timerOverlay.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.globalAlpha = 1.0; if (timerOverlay === dragTarget) { ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(timerOverlay.x, timerOverlay.y, timerWidth, timerHeight); } }
             animationFrameId = requestAnimationFrame(drawFrame);
-        }
-        drawFrame();
+        } drawFrame();
 
         // --- YOUTUBE LIVE ---
         btnStream.addEventListener('click', () => {
@@ -824,52 +628,31 @@
             initAudio(); updateStatus('Menyambung ke VPS...', 'text-yellow-500', 'fa-spinner fa-spin');
             try { liveSocket = new WebSocket('wss://livestreamingattauhid.duckdns.org'); } catch(e) { alert('Gagal: ' + e.message); updateStatus(stream ? `Kamera Aktif` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle'); return; }
             liveSocket.onopen = () => {
-                updateStatus('ON AIR (LIVE)', 'text-red-500', 'fa-broadcast-tower fa-fade');
-                btnStream.classList.add('hidden'); btnRecord.classList.add('hidden'); btnStopStream.classList.remove('hidden'); liveSocket.send(rtmpUrl);
-                const canvasStream = canvas.captureStream(30);
-                if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
-                const options = { mimeType: 'video/webm; codecs=h264' }; 
-                try { liveRecorder = new MediaRecorder(canvasStream, options); } catch(e) { liveRecorder = new MediaRecorder(canvasStream); }
-                liveRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0 && liveSocket.readyState === WebSocket.OPEN) liveSocket.send(e.data); };
-                liveRecorder.start(1000); 
+                updateStatus('ON AIR (LIVE)', 'text-red-500', 'fa-broadcast-tower fa-fade'); btnStream.classList.add('hidden'); btnRecord.classList.add('hidden'); btnStopStream.classList.remove('hidden'); liveSocket.send(rtmpUrl);
+                const canvasStream = canvas.captureStream(30); if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
+                const options = { mimeType: 'video/webm; codecs=h264' }; try { liveRecorder = new MediaRecorder(canvasStream, options); } catch(e) { liveRecorder = new MediaRecorder(canvasStream); }
+                liveRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0 && liveSocket.readyState === WebSocket.OPEN) liveSocket.send(e.data); }; liveRecorder.start(1000); 
             };
             liveSocket.onclose = () => { stopLiveStream(); }; liveSocket.onerror = (err) => { console.error("WS Error:", err); stopLiveStream(); alert('Koneksi terputus! Pastikan VPS menyala.'); };
         });
-        function stopLiveStream() {
-            if (liveRecorder && liveRecorder.state !== 'inactive') liveRecorder.stop(); if (liveSocket && liveSocket.readyState === WebSocket.OPEN) liveSocket.close();
-            liveSocket = null; btnStream.classList.remove('hidden'); btnRecord.classList.remove('hidden'); btnStopStream.classList.add('hidden');
-            updateStatus(stream ? `Kamera Aktif` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle');
-        }
+        function stopLiveStream() { if (liveRecorder && liveRecorder.state !== 'inactive') liveRecorder.stop(); if (liveSocket && liveSocket.readyState === WebSocket.OPEN) liveSocket.close(); liveSocket = null; btnStream.classList.remove('hidden'); btnRecord.classList.remove('hidden'); btnStopStream.classList.add('hidden'); updateStatus(stream ? `Kamera Aktif` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle'); }
         btnStopStream.addEventListener('click', stopLiveStream);
 
         // --- REKAM LOKAL ---
         btnRecord.addEventListener('click', () => {
-            initAudio(); const canvasStream = canvas.captureStream(30);
-            if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
+            initAudio(); const canvasStream = canvas.captureStream(30); if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
             const options = { mimeType: 'video/webm; codecs=vp9' }; try { mediaRecorder = new MediaRecorder(canvasStream, options); } catch (e) { mediaRecorder = new MediaRecorder(canvasStream); }
-            recordedChunks = []; mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
-            mediaRecorder.onstop = saveRecording; mediaRecorder.start(); isRecording = true;
+            recordedChunks = []; mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); }; mediaRecorder.onstop = saveRecording; mediaRecorder.start(); isRecording = true;
             btnRecord.classList.add('hidden'); btnStream.classList.add('hidden'); btnStopRecord.classList.remove('hidden'); updateStatus('Merekam...', 'text-red-500', 'fa-circle-dot');
         });
-        btnStopRecord.addEventListener('click', () => {
-            if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; btnRecord.classList.remove('hidden'); btnStream.classList.remove('hidden'); btnStopRecord.classList.add('hidden'); updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle'); }
-        });
-        function saveRecording() {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' }); const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.style = 'display: none'; a.href = url; a.download = `Kajian_Pro_${currentCamHeight}p_${new Date().getTime()}.webm`;
-            document.body.appendChild(a); a.click(); setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100);
-        }
+        btnStopRecord.addEventListener('click', () => { if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; btnRecord.classList.remove('hidden'); btnStream.classList.remove('hidden'); btnStopRecord.classList.add('hidden'); updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle'); } });
+        function saveRecording() { const blob = new Blob(recordedChunks, { type: 'video/webm' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style = 'display: none'; a.href = url; a.download = `Kajian_Pro_${currentCamHeight}p_${new Date().getTime()}.webm`; document.body.appendChild(a); a.click(); setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); }
 
-        // --- TIMER ---
         function formatTime(totalSeconds) { const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0'); const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0'); const s = (totalSeconds % 60).toString().padStart(2, '0'); return `${h}:${m}:${s}`; }
-        btnToggleTimer.addEventListener('click', () => {
-            timerActive = !timerActive;
-            if (timerActive) { lastTimerUpdate = Date.now(); btnToggleTimer.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Timer'; btnToggleTimer.classList.replace('bg-blue-600', 'bg-yellow-600'); btnToggleTimer.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-700'); } 
-            else { btnToggleTimer.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Mulai Timer'; btnToggleTimer.classList.replace('bg-yellow-600', 'bg-blue-600'); btnToggleTimer.classList.replace('hover:bg-yellow-700', 'hover:bg-blue-700'); }
-        });
+        btnToggleTimer.addEventListener('click', () => { timerActive = !timerActive; if (timerActive) { lastTimerUpdate = Date.now(); btnToggleTimer.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Timer'; btnToggleTimer.classList.replace('bg-blue-600', 'bg-yellow-600'); btnToggleTimer.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-700'); } else { btnToggleTimer.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Mulai Timer'; btnToggleTimer.classList.replace('bg-yellow-600', 'bg-blue-600'); btnToggleTimer.classList.replace('hover:bg-yellow-700', 'hover:bg-blue-700'); } });
         btnResetTimer.addEventListener('click', () => { timerSeconds = 0; if (!timerActive) drawFrame(); });
 
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(r => console.log('SW sukses!')).catch(e => console.log('SW gagal:', e)); }); }
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => {}); }); }
     </script>
 </body>
 </html>
