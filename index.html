@@ -551,7 +551,9 @@
         const filterSelectEl = document.getElementById('filterSelect');
         if (filterSelectEl) { filterSelectEl.addEventListener('change', () => { if(!isRemoteAction) syncSettingsToFirebase(); }); }
 
-        // --- FIREBASE SYNC ---
+        // =========================================================================
+        // PERBAIKAN: FIREBASE SYNC (MENGIRIM SELURUH DATA OVERLAY KE CLOUD)
+        // =========================================================================
         function syncSettingsToFirebase() { 
             if (!window.firebaseReady) return; 
             window.fbSet(window.fbRef(window.fbDB, 'studio/settings'), { 
@@ -559,7 +561,18 @@
                 focusAuto: focusModeToggle.checked, focusDist: camFocusInput.value, camFilter: filterSelectEl ? filterSelectEl.value : 'none'
             }); 
         }
-        function syncOverlaysToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/textOverlays'), overlays.filter(o => o.type === 'text')); saveImagesToIndexedDB(); }
+
+        // FUNGSI BARU: Kirim semua info (x, y, ukuran, dll) gambar & teks ke Firebase
+        function syncOverlaysToFirebase() { 
+            if (!window.firebaseReady) return; 
+            const overlayData = overlays.map(o => ({
+                id: o.id, type: o.type, name: o.name, text: o.text || '', font: o.font || '', color: o.color || '',
+                x: o.x, y: o.y, w: o.w, h: o.h, baseSize: o.baseSize || 50, scale: o.scale, visible: o.visible, alpha: o.alpha
+            }));
+            window.fbSet(window.fbRef(window.fbDB, 'studio/allOverlays'), overlayData); 
+            saveImagesToIndexedDB(); 
+        }
+
         function syncSceneToFirebase(sceneName) { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/currentScene'), sceneName); }
         function syncMediaStatesToFirebase() { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/mediaStates'), window.mediaState); }
 
@@ -582,7 +595,20 @@
                 }
             });
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/currentScene'), (snapshot) => { const remoteScene = snapshot.val(); if (remoteScene && remoteScene !== pendingScene && remoteScene !== currentScene) { isRemoteAction = true; changeScene(remoteScene); isRemoteAction = false; } });
-            window.fbOnValue(window.fbRef(window.fbDB, 'studio/textOverlays'), (snapshot) => { const remoteTexts = snapshot.val() || []; if (dragTarget && dragTarget.type === 'text') return; const imageOverlays = overlays.filter(o => o.type === 'image'); overlays = [...imageOverlays, ...remoteTexts]; renderOverlayListUI(); });
+            
+            // PERBAIKAN: PENERIMA PIPA SINYAL OVERLAY DARI FIREBASE
+            window.fbOnValue(window.fbRef(window.fbDB, 'studio/allOverlays'), (snapshot) => { 
+                const remoteOverlays = snapshot.val() || []; 
+                if (!isRemoteAction) {
+                    // Gabungkan data posisi dari Cloud dengan data file mentah (blobData) lokal
+                    overlays = remoteOverlays.map(ro => {
+                        const existing = overlays.find(o => o.id === ro.id);
+                        return existing ? { ...existing, ...ro } : ro;
+                    });
+                    renderOverlayListUI(); 
+                }
+            });
+
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/mediaStates'), (snapshot) => {
                 const remoteStates = val = snapshot.val(); if (remoteStates) {
                     isRemoteAction = true; Object.keys(remoteStates).forEach(key => {
@@ -627,9 +653,8 @@
             const file = e.target.files[0]; if (!file) return; const img = new Image(); const objectURL = URL.createObjectURL(file);
             img.onload = () => { 
                 let w = img.width; let h = img.height; if (h > 200) { const ratio = 200 / h; h = 200; w = w * ratio; } 
-                // DEFAULT VISIBLE: FALSE (TERSEMBUNYI SAAT BARU DITAMBAHKAN)
                 overlays.push({ id: Date.now(), type: 'image', name: file.name, img: img, x: canvas.width / 2 - w / 2, y: canvas.height / 2 - h / 2, w: w, h: h, scale: 1, visible: false, alpha: 0.0, blobData: file }); 
-                renderOverlayListUI(); saveImagesToIndexedDB(); overlayInput.value = ""; 
+                renderOverlayListUI(); syncOverlaysToFirebase(); overlayInput.value = ""; 
             }; img.src = objectURL;
         });
         
@@ -637,16 +662,15 @@
         
         btnAddText.addEventListener('click', () => { 
             const textVal = textInput.value.trim(); if (!textVal) return; const baseSize = 50; ctx.font = `bold ${baseSize}px ${fontSelect.value}`; const textWidth = ctx.measureText(textVal).width; 
-            // DEFAULT VISIBLE: FALSE (TERSEMBUNYI SAAT BARU DITAMBAHKAN)
             overlays.push({ id: Date.now(), type: 'text', name: textVal, text: textVal, font: fontSelect.value, color: textColor.value, x: canvas.width / 2 - textWidth / 2, y: canvas.height / 2 - baseSize / 2, w: textWidth, h: baseSize, baseSize: baseSize, scale: 1, visible: false, alpha: 0.0 }); 
             renderOverlayListUI(); syncOverlaysToFirebase(); textInput.value = ""; 
         });
         
-        btnClearOverlays.addEventListener('click', () => { overlays = []; renderOverlayListUI(); syncOverlaysToFirebase(); saveImagesToIndexedDB(); });
+        btnClearOverlays.addEventListener('click', () => { overlays = []; renderOverlayListUI(); syncOverlaysToFirebase(); });
 
-        window.toggleOverlay = function(id) { const ov = overlays.find(o => o.id === id); if (ov) { ov.visible = !ov.visible; renderOverlayListUI(); if(ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); } };
-        window.deleteOverlay = function(id) { const ov = overlays.find(o => o.id === id); overlays = overlays.filter(o => o.id !== id); renderOverlayListUI(); if(ov && ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); };
-        window.updateOverlayScale = function(id, scaleVal) { const ov = overlays.find(o => o.id === id); if (ov) { ov.scale = scaleVal; if(ov.type === 'text') syncOverlaysToFirebase(); else saveImagesToIndexedDB(); } };
+        window.toggleOverlay = function(id) { const ov = overlays.find(o => o.id === id); if (ov) { ov.visible = !ov.visible; renderOverlayListUI(); syncOverlaysToFirebase(); } };
+        window.deleteOverlay = function(id) { const ov = overlays.find(o => o.id === id); overlays = overlays.filter(o => o.id !== id); renderOverlayListUI(); syncOverlaysToFirebase(); };
+        window.updateOverlayScale = function(id, scaleVal) { const ov = overlays.find(o => o.id === id); if (ov) { ov.scale = scaleVal; syncOverlaysToFirebase(); } };
 
         function renderOverlayListUI() {
             emptyOverlayMsg.style.display = overlays.length === 0 ? 'block' : 'none'; Array.from(overlayList.children).forEach(child => { if(child.id !== 'emptyOverlayMsg') child.remove(); });
@@ -665,13 +689,20 @@
             if (timerActive || timerSeconds > 0) { ctx.font = `bold ${timerOverlay.baseSize * timerOverlay.scale}px monospace`; const timerWidth = ctx.measureText(formatTime(timerSeconds)).width; const timerHeight = timerOverlay.baseSize * timerOverlay.scale; if (coords.x >= timerOverlay.x && coords.x <= timerOverlay.x + timerWidth && coords.y >= timerOverlay.y && coords.y <= timerOverlay.y + timerHeight) { dragTarget = timerOverlay; dragOffsetX = coords.x - timerOverlay.x; dragOffsetY = coords.y - timerOverlay.y; if(e.cancelable) e.preventDefault(); return; } }
             for (let i = overlays.length - 1; i >= 0; i--) { 
                 const ov = overlays[i]; 
-                // Cek: Kalau hide, V16 gak bisa klik, tapi V15 TETAP BISA klik
                 if (!ov.visible && !document.body.classList.contains('mode-v15')) continue; 
                 let currentW, currentH; if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; } else { ctx.font = `bold ${ov.baseSize * ov.scale}px ${ov.font}`; currentW = ctx.measureText(ov.text).width; currentH = ov.baseSize * ov.scale; } if (coords.x >= ov.x && coords.x <= ov.x + currentW && coords.y >= ov.y && coords.y <= ov.y + currentH) { dragTarget = ov; dragOffsetX = coords.x - ov.x; dragOffsetY = coords.y - ov.y; if(e.cancelable) e.preventDefault(); return; } 
             }
         }
         function handleDragMove(e) { if (!dragTarget) return; if(e.cancelable) e.preventDefault(); const coords = getCanvasCoords(e); dragTarget.x = coords.x - dragOffsetX; dragTarget.y = coords.y - dragOffsetY; }
-        function handleDragEnd(e) { if (dragTarget) { if(dragTarget.type === 'text') syncOverlaysToFirebase(); else if(dragTarget.type === 'image') saveImagesToIndexedDB(); } dragTarget = null; }
+        
+        // PERBAIKAN: SETIAP SELESAI GESER, LANGSUNG SINKRON KE FIREBASE
+        function handleDragEnd(e) { 
+            if (dragTarget) { 
+                syncOverlaysToFirebase(); 
+            } 
+            dragTarget = null; 
+        }
+        
         canvas.addEventListener('mousedown', handleDragStart); canvas.addEventListener('mousemove', handleDragMove); window.addEventListener('mouseup', handleDragEnd); canvas.addEventListener('touchstart', handleDragStart, { passive: false }); canvas.addEventListener('touchmove', handleDragMove, { passive: false }); window.addEventListener('touchend', handleDragEnd);
 
         window.changeScene = function(scene) { initAudio(); if (currentScene === scene || pendingScene === scene) return; pendingScene = scene; transitionState = 1; document.querySelectorAll('.scene-btn').forEach(btn => btn.classList.remove('active')); document.getElementById('btnScene' + scene.charAt(0).toUpperCase() + scene.slice(1)).classList.add('active'); if (!isRemoteAction) syncSceneToFirebase(scene); };
@@ -710,20 +741,20 @@
             
             if (transitionState > 0) { if (transitionState === 1) { transitionAlpha = Math.min(1.0, transitionAlpha + sceneFadeSpeed); if (transitionAlpha >= 1.0) { executeSceneChange(); transitionState = 2; } } else if (transitionState === 2) { transitionAlpha = Math.max(0.0, transitionAlpha - sceneFadeSpeed); if (transitionAlpha <= 0.0) transitionState = 0; } ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
             
-            // --- GAMBAR OVERLAY DENGAN STUDIO MODE ---
             const isV15 = document.body.classList.contains('mode-v15');
             overlays.forEach(ov => { 
                 if (ov.visible) ov.alpha = Math.min(1.0, ov.alpha + overlayFadeSpeed); 
                 else ov.alpha = Math.max(0.0, ov.alpha - overlayFadeSpeed); 
                 
                 let drawAlpha = ov.alpha;
-                // Bayangan Khusus V15: Kalau di-hide, tampilkan transparan 40% buat ditarik-tarik
                 if (isV15 && !ov.visible) { drawAlpha = 0.4; }
 
                 if (drawAlpha > 0.0) { 
                     ctx.globalAlpha = drawAlpha; let currentW, currentH; 
-                    if (ov.type === 'image') { 
-                        currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; ctx.drawImage(ov.img, ov.x, ov.y, currentW, currentH); 
+                    // Pastikan gambar tidak error saat digambar jika file lokal tidak ditemukan di tablet
+                    if (ov.type === 'image' && ov.img) { 
+                        currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; 
+                        try { ctx.drawImage(ov.img, ov.x, ov.y, currentW, currentH); } catch(e) {}
                     } else if (ov.type === 'text') { 
                         const currentSize = ov.baseSize * ov.scale; ctx.font = `bold ${currentSize}px ${ov.font}`; ctx.fillStyle = ov.color; ctx.textBaseline = 'top'; currentW = ctx.measureText(ov.text).width; currentH = currentSize; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; ctx.fillText(ov.text, ov.x, ov.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; 
                     } 
