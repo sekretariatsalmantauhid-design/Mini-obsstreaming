@@ -172,6 +172,12 @@
                             <select id="audioInputSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3">
                                 <option value="default">Default (Bawaan HP)</option>
                             </select>
+                            <label class="block text-xs font-bold text-gray-400 mb-2 mt-3"><i class="fa-solid fa-wave-square mr-1"></i> Kualitas Audio (Sample Rate)</label>
+<select id="audioSampleRate" class="w-full bg-gray-800 border border-gray-600 text-white rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3">
+    <option value="44100" selected>44100 Hz (Standar - Ringan)</option>
+    <option value="48000">48000 Hz (Berat - Kualitas Studio)</option>
+    <option value="22050">22050 Hz (Sangat Ringan - Anti Kresek)</option>
+</select>
 
                             <div class="border-t border-gray-700 pt-3 mt-3">
                                 <label class="block text-xs font-bold text-gray-400 mb-2"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Filter Kamera</label>
@@ -213,7 +219,7 @@
                                         </label>
                                         <div class="flex items-center gap-3 mb-2">
                                             <i class="fa-solid fa-mountain text-gray-500 text-xs"></i>
-                                            <input type="range" id="camFocusInput" min="0" max="1" step="0.05" value="0.5" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                                            <input type="range" id="camFocusInput" min="0" max="2" step="0.01" value="0.15" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
                                             <i class="fa-solid fa-user text-gray-500 text-xs"></i>
                                         </div>
                                     </div>
@@ -374,9 +380,12 @@
         let analyser = null; let dataArray = null;
         const vuMeterWrapper = document.getElementById('vuMeterWrapper'); const vuMeterBar = document.getElementById('vuMeterBar');
 
-        function initAudio() {
+                function initAudio() {
             if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext; audioCtx = new AudioContext();
+                const rateEl = document.getElementById('audioSampleRate');
+                const selectedRate = rateEl ? parseInt(rateEl.value) : 44100;
+                const AudioContext = window.AudioContext || window.webkitAudioContext; 
+                audioCtx = new AudioContext({ latencyHint: 'interactive', sampleRate: selectedRate });
                 mixedAudioDest = audioCtx.createMediaStreamDestination();
                 analyser = audioCtx.createAnalyser(); analyser.fftSize = 256; dataArray = new Uint8Array(analyser.frequencyBinCount);
                 const dummyAudio = new Audio(); dummyAudio.srcObject = mixedAudioDest.stream; const dummySource = audioCtx.createMediaStreamSource(mixedAudioDest.stream); dummySource.connect(analyser);
@@ -465,7 +474,7 @@
                             try {
                                 capabilities = videoTrack.getCapabilities();
                                 if (capabilities.focusDistance) {
-                                    camFocusInput.min = capabilities.focusDistance.min; camFocusInput.max = capabilities.focusDistance.max; camFocusInput.step = capabilities.focusDistance.step || 0.05;
+                                    camFocusInput.min = capabilities.focusDistance.min; camFocusInput.max = capabilities.focusDistance.max; camFocusInput.step = 0.01;
                                     const currentSettings = videoTrack.getSettings();
                                     if(currentSettings.focusMode === 'continuous') { focusModeToggle.checked = true; } 
                                     else { focusModeToggle.checked = false; if (currentSettings.focusDistance) camFocusInput.value = currentSettings.focusDistance; }
