@@ -780,20 +780,92 @@
         } drawFrame();
 
         // --- YOUTUBE LIVE ---
+        let isReconnecting = false;
+        let reconnectTimeout = null;
+
         btnStream.addEventListener('click', () => {
-            const rtmpUrl = rtmpInput.value.trim(); if (!rtmpUrl) { alert('Isi dulu URL RTMP dan Stream Key dari YouTube!'); return; }
-            initAudio(); updateStatus('Menyambung ke VPS...', 'text-yellow-500', 'fa-spinner fa-spin');
-            try { liveSocket = new WebSocket('wss://livestreamingattauhid.duckdns.org'); } catch(e) { alert('Gagal: ' + e.message); updateStatus(stream ? `Kamera Aktif` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle'); return; }
-            liveSocket.onopen = () => {
-                updateStatus('ON AIR (LIVE)', 'text-red-500', 'fa-broadcast-tower fa-fade'); btnStream.classList.add('hidden'); btnRecord.classList.add('hidden'); btnStopStream.classList.remove('hidden'); liveSocket.send(rtmpUrl);
-                const canvasStream = canvas.captureStream(30); if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
-                const options = { mimeType: 'video/webm; codecs=h264' }; try { liveRecorder = new MediaRecorder(canvasStream, options); } catch(e) { liveRecorder = new MediaRecorder(canvasStream); }
-                liveRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0 && liveSocket.readyState === WebSocket.OPEN) liveSocket.send(e.data); }; liveRecorder.start(1000); 
-            };
-            liveSocket.onclose = () => { stopLiveStream(); }; liveSocket.onerror = (err) => { console.error("WS Error:", err); stopLiveStream(); alert('Koneksi terputus! Pastikan VPS menyala.'); };
+            const rtmpUrl = rtmpInput.value.trim();
+            if (!rtmpUrl) { alert('Isi dulu URL RTMP dan Stream Key dari YouTube!'); return; }
+            initAudio();
+            isReconnecting = false; // Reset status reconnect
+            mulaiStreaming(rtmpUrl);
         });
-        function stopLiveStream() { if (liveRecorder && liveRecorder.state !== 'inactive') liveRecorder.stop(); if (liveSocket && liveSocket.readyState === WebSocket.OPEN) liveSocket.close(); liveSocket = null; btnStream.classList.remove('hidden'); btnRecord.classList.remove('hidden'); btnStopStream.classList.add('hidden'); updateStatus(stream ? `Kamera Aktif` : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle'); }
-        btnStopStream.addEventListener('click', stopLiveStream);
+
+        function mulaiStreaming(rtmpUrl) {
+            updateStatus(isReconnecting ? 'Koneksi terputus! Menyambung ulang...' : 'Menyambung ke VPS...', 'text-yellow-500', 'fa-spinner fa-spin');
+            
+            try {
+                liveSocket = new WebSocket('wss://livestreamingattauhid.duckdns.org');
+            } catch(e) {
+                alert('Gagal: ' + e.message);
+                updateStatus(stream ? 'Kamera Aktif' : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle');
+                return;
+            }
+
+            liveSocket.onopen = () => {
+                isReconnecting = false;
+                if (reconnectTimeout) clearTimeout(reconnectTimeout);
+                
+                updateStatus('ON AIR (LIVE)', 'text-red-500', 'fa-broadcast-tower fa-fade');
+                btnStream.classList.add('hidden');
+                btnRecord.classList.add('hidden');
+                btnStopStream.classList.remove('hidden');
+                
+                // Kirim rtmp url ke VPS
+                liveSocket.send(rtmpUrl);
+
+                // Jalankan perekam jika belum aktif (biar ga double pas reconnect)
+                if (!liveRecorder || liveRecorder.state === 'inactive') {
+                    const canvasStream = canvas.captureStream(30);
+                    if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) {
+                        canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]);
+                    } else if (stream && stream.getAudioTracks().length > 0) {
+                        canvasStream.addTrack(stream.getAudioTracks()[0]);
+                    }
+
+                    const options = { mimeType: 'video/webm; codecs=h264' };
+                    try { liveRecorder = new MediaRecorder(canvasStream, options); } 
+                    catch(e) { liveRecorder = new MediaRecorder(canvasStream); }
+
+                    liveRecorder.ondataavailable = (e) => {
+                        if (e.data && e.data.size > 0 && liveSocket.readyState === WebSocket.OPEN) {
+                            liveSocket.send(e.data);
+                        }
+                    };
+                    liveRecorder.start(1000);
+                }
+            };
+
+            liveSocket.onclose = () => {
+                // JURUS AUTO-RECONNECT: Jika bukan dihentikan manual oleh Bos, langsung nyambung lagi!
+                if (!isReconnecting && btnStream.classList.contains('hidden')) {
+                    isReconnecting = true;
+                    updateStatus('Sinyal Drop! Mencoba nyambung lagi...', 'text-yellow-500', 'fa-spinner fa-spin');
+                    console.log('Koneksi putus sesaat. Mencoba hubungkan kembali dalam 3 detik...');
+                    reconnectTimeout = setTimeout(() => {
+                        mulaiStreaming(rtmpUrl);
+                    }, 3000); // Tunggu 3 detik lalu coba tembak VPS lagi
+                }
+            };
+
+            liveSocket.onerror = (err) => {
+                console.error("WS Error:", err);
+                liveSocket.close();
+            };
+        }
+
+        function stopLiveStream() {
+            isReconnecting = false;
+            if (reconnectTimeout) clearTimeout(reconnectTimeout);
+            
+            if (liveRecorder && liveRecorder.state !== 'inactive') liveRecorder.stop();
+            if (liveSocket && liveSocket.readyState === WebSocket.OPEN) liveSocket.close();
+            
+            liveSocket = null;
+            btnStream.classList.remove('hidden');
+            // Kembalikan status ke kamera aktif biasa
+            updateStatus(stream ? 'Kamera Aktif' : 'Standby', stream ? 'text-green-400' : 'text-gray-300', stream ? 'fa-video' : 'fa-circle');
+        }
 
         // --- REKAM LOKAL ---
         btnRecord.addEventListener('click', () => {
