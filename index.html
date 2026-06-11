@@ -498,6 +498,13 @@
             } catch (err) { console.error(err); camPlaceholderText.innerText = "Kamera Belum Aktif"; alert("Gagal akses kamera/mic Bos!"); }
         });
 
+        // --- SIHIR PENEMBUS TIRAI LAYAR (MODE PANEL) ---
+        const tiraiPenutup = document.getElementById('camOffPlaceholder');
+        if (tiraiPenutup) {
+            tiraiPenutup.style.backgroundColor = 'transparent'; // Biar jadi kaca bening, logo di kanvas jadi kelihatan
+            tiraiPenutup.style.pointerEvents = 'none'; // Biar tembus sentuhan jari, timer jadi bisa digeser
+        }
+
         btnStopCam.addEventListener('click', () => {
             if (stream) stream.getTracks().forEach(track => track.stop()); stream = null; videoTrack = null;
             if (micNode) { micNode.disconnect(); micNode = null; }
