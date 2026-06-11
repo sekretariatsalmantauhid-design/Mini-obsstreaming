@@ -644,6 +644,38 @@
                     }); checkPlayback(); isRemoteAction = false;
                 }
             });
+            
+            // SINKRONISASI PINDAH ADEGAN (SCENE) ANTAR PERANGKAT
+            window.fbOnValue(window.fbRef(window.fbDB, 'studio/currentScene'), (snapshot) => {
+                const remoteScene = snapshot.val();
+                if (remoteScene && remoteScene !== currentScene && remoteScene !== pendingScene) {
+                    isRemoteAction = true;
+                    changeScene(remoteScene); // <--- HP Oppo disuruh ikut pindah adegan!
+                    isRemoteAction = false;
+                }
+            });
+
+            // SINKRONISASI TIMER ANTAR PERANGKAT
+            window.fbOnValue(window.fbRef(window.fbDB, 'studio/timerState'), (snapshot) => {
+                const ts = snapshot.val();
+                if (ts && !isRemoteAction) {
+                    timerActive = ts.active;
+                    timerSeconds = ts.seconds;
+                    lastTimerUpdate = ts.lastUpdate;
+                    
+                    if (timerActive) {
+                        btnToggleTimer.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Timer';
+                        btnToggleTimer.classList.replace('bg-blue-600', 'bg-yellow-600');
+                        btnToggleTimer.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-700');
+                    } else {
+                        btnToggleTimer.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Mulai Timer';
+                        btnToggleTimer.classList.replace('bg-yellow-600', 'bg-blue-600');
+                        btnToggleTimer.classList.replace('hover:bg-yellow-700', 'hover:bg-blue-700');
+                    }
+                    if (!timerActive) drawFrame();
+                }
+            });
+
             // SINKRONISASI TOMBOL LIVE STREAMING ANTAR PERANGKAT
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/streamCommand'), (snapshot) => {
                 const cmd = snapshot.val();
@@ -762,11 +794,26 @@
         function getCanvasCoords(e) { const rect = canvas.getBoundingClientRect(); let ratioX = canvas.width / rect.width; let ratioY = canvas.height / rect.height; const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * ratioX, y: (clientY - rect.top) * ratioY }; }
         function handleDragStart(e) {
             const coords = getCanvasCoords(e);
-            if (timerActive || timerSeconds > 0) { ctx.font = `bold ${timerOverlay.baseSize * timerOverlay.scale}px monospace`; const timerWidth = ctx.measureText(formatTime(timerSeconds)).width; const timerHeight = timerOverlay.baseSize * timerOverlay.scale; if (coords.x >= timerOverlay.x && coords.x <= timerOverlay.x + timerWidth && coords.y >= timerOverlay.y && coords.y <= timerOverlay.y + timerHeight) { dragTarget = timerOverlay; dragOffsetX = coords.x - timerOverlay.x; dragOffsetY = coords.y - timerOverlay.y; if(e.cancelable) e.preventDefault(); return; } }
+            const pad = 20; // Bantalan ekstra 20px biar teks/timer gampang dipencet jari!
+            
+            if (timerActive || timerSeconds > 0) { 
+                ctx.font = `bold ${timerOverlay.baseSize * timerOverlay.scale}px monospace`; 
+                const timerWidth = ctx.measureText(formatTime(timerSeconds)).width; 
+                const timerHeight = timerOverlay.baseSize * timerOverlay.scale; 
+                if (coords.x >= timerOverlay.x - pad && coords.x <= timerOverlay.x + timerWidth + pad && coords.y >= timerOverlay.y - pad && coords.y <= timerOverlay.y + timerHeight + pad) { 
+                    dragTarget = timerOverlay; dragOffsetX = coords.x - timerOverlay.x; dragOffsetY = coords.y - timerOverlay.y; if(e.cancelable) e.preventDefault(); return; 
+                } 
+            }
             for (let i = overlays.length - 1; i >= 0; i--) { 
                 const ov = overlays[i]; 
                 if (!ov.visible && !document.body.classList.contains('mode-v15')) continue; 
-                let currentW, currentH; if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; } else { ctx.font = `bold ${ov.baseSize * ov.scale}px ${ov.font}`; currentW = ctx.measureText(ov.text).width; currentH = ov.baseSize * ov.scale; } if (coords.x >= ov.x && coords.x <= ov.x + currentW && coords.y >= ov.y && coords.y <= ov.y + currentH) { dragTarget = ov; dragOffsetX = coords.x - ov.x; dragOffsetY = coords.y - ov.y; if(e.cancelable) e.preventDefault(); return; } 
+                let currentW, currentH; 
+                if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; } 
+                else { ctx.font = `bold ${ov.baseSize * ov.scale}px ${ov.font}`; currentW = ctx.measureText(ov.text).width; currentH = ov.baseSize * ov.scale; } 
+                
+                if (coords.x >= ov.x - pad && coords.x <= ov.x + currentW + pad && coords.y >= ov.y - pad && coords.y <= ov.y + currentH + pad) { 
+                    dragTarget = ov; dragOffsetX = coords.x - ov.x; dragOffsetY = coords.y - ov.y; if(e.cancelable) e.preventDefault(); return; 
+                } 
             }
         }
         function handleDragMove(e) { if (!dragTarget) return; if(e.cancelable) e.preventDefault(); const coords = getCanvasCoords(e); dragTarget.x = coords.x - dragOffsetX; dragTarget.y = coords.y - dragOffsetY; }
@@ -971,12 +1018,27 @@
         function saveRecording() { const blob = new Blob(recordedChunks, { type: 'video/webm' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style = 'display: none'; a.href = url; a.download = `Kajian_Pro_${currentCamHeight}p_${new Date().getTime()}.webm`; document.body.appendChild(a); a.click(); setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); }
 
         function formatTime(totalSeconds) { const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0'); const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0'); const s = (totalSeconds % 60).toString().padStart(2, '0'); return `${h}:${m}:${s}`; }
+        
+        function syncTimerToFirebase() {
+            if (!window.firebaseReady) return;
+            window.fbSet(window.fbRef(window.fbDB, 'studio/timerState'), { active: timerActive, seconds: timerSeconds, lastUpdate: lastTimerUpdate });
+        }
+
         btnToggleTimer.addEventListener('click', () => {
+            isRemoteAction = true;
             timerActive = !timerActive;
             if (timerActive) { lastTimerUpdate = Date.now(); btnToggleTimer.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> Pause Timer'; btnToggleTimer.classList.replace('bg-blue-600', 'bg-yellow-600'); btnToggleTimer.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-700'); } 
             else { btnToggleTimer.innerHTML = '<i class="fa-solid fa-play mr-1"></i> Mulai Timer'; btnToggleTimer.classList.replace('bg-yellow-600', 'bg-blue-600'); btnToggleTimer.classList.replace('hover:bg-yellow-700', 'hover:bg-blue-700'); }
+            syncTimerToFirebase();
+            setTimeout(() => isRemoteAction = false, 500);
         });
-        btnResetTimer.addEventListener('click', () => { timerSeconds = 0; if (!timerActive) drawFrame(); });
+
+        btnResetTimer.addEventListener('click', () => { 
+            isRemoteAction = true;
+            timerSeconds = 0; if (!timerActive) drawFrame(); 
+            syncTimerToFirebase();
+            setTimeout(() => isRemoteAction = false, 500);
+        });
 
         let wakeLock = null;
         async function requestWakeLock() {
