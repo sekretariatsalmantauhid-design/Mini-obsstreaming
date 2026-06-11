@@ -804,9 +804,16 @@
                     dragTarget = timerOverlay; dragOffsetX = coords.x - timerOverlay.x; dragOffsetY = coords.y - timerOverlay.y; if(e.cancelable) e.preventDefault(); return; 
                 } 
             }
+            
+            const isV15 = document.body.classList.contains('mode-v15');
+            const isRemote = !stream;
+
             for (let i = overlays.length - 1; i >= 0; i--) { 
                 const ov = overlays[i]; 
-                if (!ov.visible && !document.body.classList.contains('mode-v15')) continue; 
+                
+                // Hanya bisa di-drag kalau visible, ATAU sedang di mode Remote
+                if (!ov.visible && !(isV15 && isRemote)) continue; 
+
                 let currentW, currentH; 
                 if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; } 
                 else { ctx.font = `bold ${ov.baseSize * ov.scale}px ${ov.font}`; currentW = ctx.measureText(ov.text).width; currentH = ov.baseSize * ov.scale; } 
@@ -862,12 +869,16 @@
             if (transitionState > 0) { if (transitionState === 1) { transitionAlpha = Math.min(1.0, transitionAlpha + sceneFadeSpeed); if (transitionAlpha >= 1.0) { executeSceneChange(); transitionState = 2; } } else if (transitionState === 2) { transitionAlpha = Math.max(0.0, transitionAlpha - sceneFadeSpeed); if (transitionAlpha <= 0.0) transitionState = 0; } ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
             
             const isV15 = document.body.classList.contains('mode-v15');
+            const isRemote = !stream; // JURUS PISAH LAYAR: Tanda kalau perangkat ini tidak punya akses kamera
+
             overlays.forEach(ov => { 
                 if (ov.visible) ov.alpha = Math.min(1.0, ov.alpha + overlayFadeSpeed); 
                 else ov.alpha = Math.max(0.0, ov.alpha - overlayFadeSpeed); 
                 
                 let drawAlpha = ov.alpha;
-                if (isV15 && !ov.visible) { drawAlpha = 0.4; }
+                
+                // Kalau ini adalah Remote Control, paksakan terlihat 40% agar mudah digeser
+                if (isV15 && isRemote && !ov.visible) { drawAlpha = 0.4; }
 
                 if (drawAlpha > 0.0) { 
                     ctx.globalAlpha = drawAlpha; let currentW, currentH; 
@@ -877,7 +888,9 @@
                     } else if (ov.type === 'text') { 
                         const currentSize = ov.baseSize * ov.scale; ctx.font = `bold ${currentSize}px ${ov.font}`; ctx.fillStyle = ov.color; ctx.textBaseline = 'top'; currentW = ctx.measureText(ov.text).width; currentH = currentSize; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; ctx.fillText(ov.text, ov.x, ov.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; 
                     } 
-                    if (ov === dragTarget && (ov.visible || isV15)) { 
+                    
+                    // Kotak kuning saat di-drag juga hanya muncul kalau visible atau sedang di Remote
+                    if (ov === dragTarget && (ov.visible || (isV15 && isRemote))) { 
                         ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(ov.x, ov.y, currentW, currentH); 
                     } 
                     ctx.globalAlpha = 1.0; 
