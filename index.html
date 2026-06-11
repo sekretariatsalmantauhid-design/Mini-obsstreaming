@@ -574,14 +574,15 @@
             }); 
         }
 
-        function syncOverlaysToFirebase() { 
-            if (!window.firebaseReady) return; 
+        function syncOverlaysToFirebase() {
+            if (!window.firebaseReady) return;
             const overlayData = overlays.map(o => ({
                 id: o.id, type: o.type, name: o.name, text: o.text || '', font: o.font || '', color: o.color || '',
-                x: o.x, y: o.y, w: o.w, h: o.h, baseSize: o.baseSize || 50, scale: o.scale, visible: o.visible, alpha: o.alpha
+                x: o.x, y: o.y, w: o.w, h: o.h, baseSize: o.baseSize || 50, scale: o.scale, visible: o.visible, alpha: o.alpha,
+                srcBase64: o.srcBase64 || '' // <--- INI DIA MUATAN SAKTINYA BOS!
             }));
-            window.fbSet(window.fbRef(window.fbDB, 'studio/allOverlays'), overlayData); 
-            saveImagesToIndexedDB(); 
+            window.fbSet(window.fbRef(window.fbDB, 'studio/allOverlays'), overlayData);
+            saveImagesToIndexedDB();
         }
 
         function syncSceneToFirebase(sceneName) { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/currentScene'), sceneName); }
