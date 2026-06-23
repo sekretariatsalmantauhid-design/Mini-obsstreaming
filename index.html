@@ -124,6 +124,9 @@
             <video id="pauseVideoSource" playsinline class="hidden"></video>
             <video id="outroVideoSource" playsinline class="hidden"></video>
             
+            <!-- KANVAS RAHASIA (UNTUK STREAMING) -->
+            <canvas id="streamCanvas" class="hidden"></canvas>
+
             <canvas id="outputCanvas" class="w-full h-full object-contain bg-black cursor-move"></canvas>
             
             <div id="camOffPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none hidden bg-black/80">
@@ -350,7 +353,12 @@
         
         // --- DOM Elements ---
         const canvasContainer = document.getElementById('canvasContainer'); const btnFullscreen = document.getElementById('btnFullscreen'); const fullscreenIcon = document.getElementById('fullscreenIcon');
-        const video = document.getElementById('videoSource'); const canvas = document.getElementById('outputCanvas'); const ctx = canvas.getContext('2d');
+        const video = document.getElementById('videoSource'); 
+        
+        // DUAL CANVAS SYSTEM
+        const streamCanvas = document.getElementById('streamCanvas'); const streamCtx = streamCanvas.getContext('2d');
+        const canvas = document.getElementById('outputCanvas'); const ctx = canvas.getContext('2d');
+        
         const camOffPlaceholder = document.getElementById('camOffPlaceholder'); const camPlaceholderText = document.getElementById('camPlaceholderText');
         const loadingDB = document.getElementById('loadingDB'); 
         const rtmpYoutube = document.getElementById('rtmpYoutube');
@@ -413,13 +421,13 @@
                     }
                 });
                 knownAudioDevices = audioInputs.map(d => d.deviceId);
-                if (autoSelectId) { audioInputSelect.value = autoSelectId; if (stream) { btnStopCam.click(); setTimeout(() => btnStartCam.click(), 500); } } 
+                if (autoSelectId) { audioInputSelect.value = autoSelectId; if (stream && appRole === 'control') { btnStopCam.click(); setTimeout(() => btnStartCam.click(), 500); } } 
                 else if ([...audioInputSelect.options].some(o => o.value === previousValue)) { audioInputSelect.value = previousValue; }
             } catch (e) {}
         }
         navigator.mediaDevices.addEventListener('devicechange', getAudioDevices);
         getAudioDevices();
-        audioInputSelect.addEventListener('change', () => { if (stream) { btnStopCam.click(); setTimeout(() => btnStartCam.click(), 500); } });
+        audioInputSelect.addEventListener('change', () => { if (stream && appRole === 'control') { btnStopCam.click(); setTimeout(() => btnStartCam.click(), 500); } });
 
         // --- CAMERA FOCUS CONTROL ---
         const focusControlContainer = document.getElementById('focusControlContainer');
@@ -498,7 +506,7 @@
         if (tiraiPenutup) { tiraiPenutup.style.backgroundColor = 'transparent'; tiraiPenutup.style.pointerEvents = 'none'; }
 
         btnStopCam.addEventListener('click', () => {
-            if (stream) stream.getTracks().forEach(track => track.stop()); stream = null; videoTrack = null;
+            if (stream && appRole === 'control' && !peerConnection) stream.getTracks().forEach(track => track.stop()); stream = null; videoTrack = null;
             if (micNode) { micNode.disconnect(); micNode = null; }
             if (currentScene === 'live') camOffPlaceholder.classList.remove('hidden');
             btnStartCam.classList.remove('hidden'); btnStopCam.classList.add('hidden');
@@ -514,6 +522,7 @@
             const res = parseInt(resolutionSelect.value);
             if (res === 480) { currentCamWidth = 854; currentCamHeight = 480; } else if (res === 720) { currentCamWidth = 1280; currentCamHeight = 720; } else if (res === 1080) { currentCamWidth = 1920; currentCamHeight = 1080; }
             canvas.width = currentCamWidth; canvas.height = currentCamHeight;
+            streamCanvas.width = currentCamWidth; streamCanvas.height = currentCamHeight; // Sinkronkan ukuran kanvas rahasia
         }
         updateResolutionState();
         resolutionSelect.addEventListener('change', () => {
@@ -575,7 +584,6 @@
                 srcBase64: o.srcBase64 || '' 
             }));
             window.fbSet(window.fbRef(window.fbDB, 'studio/allOverlays'), overlayData);
-            saveImagesToIndexedDB();
         }
 
         function syncSceneToFirebase(sceneName) { if (!window.firebaseReady) return; window.fbSet(window.fbRef(window.fbDB, 'studio/currentScene'), sceneName); }
@@ -656,7 +664,6 @@
                         btnToggleTimer.classList.replace('bg-yellow-600', 'bg-blue-600');
                         btnToggleTimer.classList.replace('hover:bg-yellow-700', 'hover:bg-blue-700');
                     }
-                    if (!timerActive) drawFrame();
                 }
             });
 
@@ -692,10 +699,32 @@
 
         async function loadDatabaseBasement() {
             try {
-                for (let key of Object.keys(mediaScenes)) { const videoBlob = await localforage.getItem(`video_${key}`); if (videoBlob) { mediaScenes[key].src = URL.createObjectURL(videoBlob); const savedMark = document.getElementById(`${key}SavedMark`); if(savedMark) savedMark.classList.remove('hidden'); } }
+                // DIKEMBALIKAN: Load Video MP4 secara otomatis saat awal buka aplikasi
+                for (let key of Object.keys(mediaScenes)) { 
+                    const videoBlob = await localforage.getItem(`video_${key}`); 
+                    if (videoBlob) { 
+                        mediaScenes[key].src = URL.createObjectURL(videoBlob); 
+                        const savedMark = document.getElementById(`${key}SavedMark`); 
+                        if(savedMark) savedMark.classList.remove('hidden'); 
+                    } 
+                }
+
+                // DIKEMBALIKAN: Membaca Gambar Overlay seperti sedia kala
                 const savedImgOverlays = await localforage.getItem('savedImageOverlays');
                 if (savedImgOverlays && savedImgOverlays.length > 0) {
-                     for (let ov of savedImgOverlays) { if (ov.blobData) { const img = new Image(); const objectURL = URL.createObjectURL(ov.blobData); await new Promise((resolve) => { img.onload = () => { overlays.push({ id: ov.id, type: 'image', name: ov.name, img: img, x: ov.x, y: ov.y, w: ov.w, h: ov.h, scale: ov.scale, visible: ov.visible, alpha: ov.alpha, blobData: ov.blobData }); resolve(); }; img.src = objectURL; }); } } renderOverlayListUI();
+                     for (let ov of savedImgOverlays) { 
+                        if (ov.srcBase64) { 
+                            const img = new Image(); 
+                            await new Promise((resolve) => { 
+                                img.onload = () => { 
+                                    overlays.push({ id: ov.id, type: 'image', name: ov.name, img: img, x: ov.x, y: ov.y, w: ov.w, h: ov.h, scale: ov.scale, visible: ov.visible, alpha: ov.alpha, srcBase64: ov.srcBase64 }); 
+                                    resolve(); 
+                                }; 
+                                img.src = ov.srcBase64; 
+                            }); 
+                        } 
+                     } 
+                     renderOverlayListUI();
                 }
             } catch (err) {} finally { 
                 loadingDB.style.display = 'none'; 
@@ -712,7 +741,6 @@
             if (role === 'control') {
                 document.getElementById('webrtcBadgeV15').classList.remove('hidden');
                 
-                // MANTRA ANTI-GHOST OFFER
                 if (window.firebaseReady) {
                     window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc'), null).then(() => {
                         setupRemoteControlReceiver();
@@ -732,7 +760,7 @@
                 satPanel.innerHTML = `
                     <div class="text-center mb-4">
                         <p class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-satellite-dish fa-fade"></i> MODE KAMERA SATELIT</p>
-                        <p class="text-white text-xs">Video akan otomatis dikirim ke Control Room.</p>
+                        <p class="text-white text-xs">Video otomatis dikirim ke Control Room.</p>
                     </div>
                     <button id="btnSatStart" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg border-2 border-emerald-400"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
                 `;
@@ -784,7 +812,7 @@
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/webrtc/offer'), async (snapshot) => {
                 const offer = snapshot.val();
                 if (offer && appRole === 'control') {
-                    statusBadge.innerHTML = '<i class="fa-solid fa-satellite-dish text-yellow-500 fa-fade mr-1"></i> Menyambungkan Satelit...';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-satellite-dish text-yellow-500 fa-fade mr-1"></i> Menyambung...';
                     if (peerConnection) peerConnection.close();
                     peerConnection = new RTCPeerConnection(rtcConfig);
 
@@ -802,6 +830,8 @@
                             stream.getTracks().forEach(t => t.stop());
                         }
                         stream = event.streams[0];
+                        
+                        // DIKEMBALIKAN: Tombol Nyala Kamera disembunyikan dan Mati Kamera dimunculkan agar UI interaktif!
                         document.getElementById('btnStartCam').classList.add('hidden');
                         document.getElementById('btnStopCam').classList.remove('hidden');
                         
@@ -827,12 +857,6 @@
             });
         }
 
-        async function saveImagesToIndexedDB() {
-            const imgOverlays = overlays.filter(o => o.type === 'image'); const dataToSave = [];
-            for (let ov of imgOverlays) { dataToSave.push({ id: ov.id, name: ov.name, x: ov.x, y: ov.y, w: ov.w, h: ov.h, scale: ov.scale, visible: ov.visible, alpha: ov.alpha, blobData: ov.blobData }); }
-            localforage.setItem('savedImageOverlays', dataToSave).catch(e => console.error("Gagal simpan:", e));
-        }
-
         Object.keys(mediaScenes).forEach(key => {
             const input = document.getElementById(`${key}Input`); const select = document.getElementById(`${key}Playback`); const vid = mediaScenes[key]; vid.loop = (select.value === 'loop');
             select.addEventListener('change', (e) => { vid.loop = (e.target.value === 'loop'); window.mediaState[key].playback = e.target.value; if(!isRemoteAction) syncMediaStatesToFirebase(); });
@@ -843,25 +867,13 @@
         
         overlayInput.addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
-            
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
                 img.onload = () => { 
                     let w = img.width; let h = img.height; 
                     if (h > 200) { const ratio = 200 / h; h = 200; w = w * ratio; } 
-                    
-                    overlays.push({ 
-                        id: Date.now(), 
-                        type: 'image', 
-                        name: file.name, 
-                        img: img, 
-                        srcBase64: event.target.result, 
-                        x: canvas.width / 2 - w / 2, 
-                        y: canvas.height / 2 - h / 2, 
-                        w: w, h: h, scale: 1, visible: false, alpha: 1.0, 
-                        blobData: file 
-                    }); 
+                    overlays.push({ id: Date.now(), type: 'image', name: file.name, img: img, srcBase64: event.target.result, x: canvas.width / 2 - w / 2, y: canvas.height / 2 - h / 2, w: w, h: h, scale: 1, visible: false, alpha: 1.0, blobData: file }); 
                     renderOverlayListUI(); syncOverlaysToFirebase(); overlayInput.value = ""; 
                 };
                 img.src = event.target.result;
@@ -906,14 +918,12 @@
                     dragTarget = timerOverlay; dragOffsetX = coords.x - timerOverlay.x; dragOffsetY = coords.y - timerOverlay.y; if(e.cancelable) e.preventDefault(); return; 
                 } 
             }
-            
-            const isV15 = document.body.classList.contains('mode-v15');
-            const isRemote = !stream && appRole === 'control'; 
 
             for (let i = overlays.length - 1; i >= 0; i--) { 
                 const ov = overlays[i]; 
                 
-                if (!ov.visible && !(isV15 && isRemote)) continue; 
+                // Bos bisa sentuh gambar walaupun mata dicoret di Control Room!
+                if (!ov.visible && appRole !== 'control') continue; 
 
                 let currentW, currentH; 
                 if (ov.type === 'image') { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; } 
@@ -939,64 +949,74 @@
         function updateStatus(text, colorClass, iconClass) { const html = `<i class="fa-solid ${iconClass} ${colorClass} mr-2 text-[10px]"></i>${text}`; document.getElementById('statusBadgeV15').innerHTML = html; }
         function updateVuMeter() { if (analyser && dataArray && stream && currentScene === 'live') { analyser.getByteFrequencyData(dataArray); let sum = 0; for(let i = 0; i < dataArray.length; i++) sum += dataArray[i]; let percent = ((sum / dataArray.length) / 128) * 100; if (percent > 100) percent = 100; vuMeterBar.style.width = percent + '%'; } else { vuMeterBar.style.width = '0%'; } }
 
-        const drawScene = (sceneId, isBackground) => {
+        const drawScene = (sceneId, isBackground, ctxTarget) => {
             let sourceElement = null; let stateAlpha = 0.0;
             if (mediaScenes[sceneId]) { const activeVid = mediaScenes[sceneId]; const playbackSelect = document.getElementById(`${sceneId}Playback`); const state = window.mediaState[sceneId]; if (isBackground) { if (state.visible) state.alpha = Math.min(1.0, state.alpha + state.fadeSpeed); else state.alpha = Math.max(0.0, state.alpha - state.fadeSpeed); stateAlpha = state.alpha; } else { if (state.pip && state.visible) state.pipAlpha = Math.min(1.0, state.pipAlpha + state.fadeSpeed); else state.pipAlpha = Math.max(0.0, state.pipAlpha - state.fadeSpeed); stateAlpha = state.pipAlpha; } if (activeVid.src && !(activeVid.ended && playbackSelect.value === 'once')) sourceElement = activeVid; }
-            if (sourceElement && stateAlpha > 0.0) { ctx.globalAlpha = stateAlpha; let drawWidth = canvas.width; let drawHeight = canvas.height; let drawX = 0; let drawY = 0; let isPipMode = false; if (!isBackground && currentScene === 'live') { isPipMode = true; drawWidth = canvas.width * 0.3; drawHeight = canvas.height * 0.3; drawX = canvas.width - drawWidth - 20; drawY = canvas.height - drawHeight - 20; } if (isPipMode) { ctx.lineWidth = 4; ctx.strokeStyle = "white"; ctx.strokeRect(drawX, drawY, drawWidth, drawHeight); } ctx.drawImage(sourceElement, drawX, drawY, drawWidth, drawHeight); ctx.globalAlpha = 1.0; }
+            if (sourceElement && stateAlpha > 0.0) { ctxTarget.globalAlpha = stateAlpha; let drawWidth = streamCanvas.width; let drawHeight = streamCanvas.height; let drawX = 0; let drawY = 0; let isPipMode = false; if (!isBackground && currentScene === 'live') { isPipMode = true; drawWidth = streamCanvas.width * 0.3; drawHeight = streamCanvas.height * 0.3; drawX = streamCanvas.width - drawWidth - 20; drawY = streamCanvas.height - drawHeight - 20; } if (isPipMode) { ctxTarget.lineWidth = 4; ctxTarget.strokeStyle = "white"; ctxTarget.strokeRect(drawX, drawY, drawWidth, drawHeight); } ctxTarget.drawImage(sourceElement, drawX, drawY, drawWidth, drawHeight); ctxTarget.globalAlpha = 1.0; }
         };
 
         function drawFrame() {
-            updateVuMeter(); ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            updateVuMeter(); 
             
+            // 1. Bersihkan KEDUA kanvas
+            streamCtx.fillStyle = "#000000"; streamCtx.fillRect(0, 0, streamCanvas.width, streamCanvas.height);
+            ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 2. Gambar Background / Kamera HANYA ke Stream Canvas dulu
             if (currentScene === 'live') { 
                 if (stream && !video.paused) { 
-                    ctx.globalAlpha = 1.0; 
+                    streamCtx.globalAlpha = 1.0; 
                     const filterSelect = document.getElementById('filterSelect');
                     if (filterSelect) {
                         const filterVal = filterSelect.value;
-                        if (filterVal === 'filter-warm') ctx.filter = 'sepia(0.3) saturate(1.2) hue-rotate(-10deg)';
-                        else if (filterVal === 'filter-bw') ctx.filter = 'grayscale(1)';
-                        else if (filterVal === 'filter-vivid') ctx.filter = 'saturate(1.5) contrast(1.1)';
-                        else ctx.filter = 'none';
+                        if (filterVal === 'filter-warm') streamCtx.filter = 'sepia(0.3) saturate(1.2) hue-rotate(-10deg)';
+                        else if (filterVal === 'filter-bw') streamCtx.filter = 'grayscale(1)';
+                        else if (filterVal === 'filter-vivid') streamCtx.filter = 'saturate(1.5) contrast(1.1)';
+                        else streamCtx.filter = 'none';
                     }
-                    const vw = video.videoWidth; const vh = video.videoHeight; const cw = canvas.width; const ch = canvas.height; 
-                    if (vw && vh) { const cropW = vw / camZoom; const cropH = vh / camZoom; const cropX = (vw - cropW) / 2; const cropY = (vh - cropH) / 2; ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cw, ch); } else { ctx.drawImage(video, 0, 0, cw, ch); }
-                    ctx.filter = 'none';
+                    const vw = video.videoWidth; const vh = video.videoHeight; const cw = streamCanvas.width; const ch = streamCanvas.height; 
+                    if (vw && vh) { const cropW = vw / camZoom; const cropH = vh / camZoom; const cropX = (vw - cropW) / 2; const cropY = (vh - cropH) / 2; streamCtx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cw, ch); } else { streamCtx.drawImage(video, 0, 0, cw, ch); }
+                    streamCtx.filter = 'none';
                 } 
-            } else if (mediaScenes[currentScene]) drawScene(currentScene, true);
+            } else if (mediaScenes[currentScene]) drawScene(currentScene, true, streamCtx);
 
-            if (currentScene === 'live') { Object.keys(mediaScenes).forEach(key => { const state = window.mediaState[key]; if ((state.pip && state.visible) || state.pipAlpha > 0.0) drawScene(key, false); }); }
+            if (currentScene === 'live') { Object.keys(mediaScenes).forEach(key => { const state = window.mediaState[key]; if ((state.pip && state.visible) || state.pipAlpha > 0.0) drawScene(key, false, streamCtx); }); }
             
-            if (transitionState > 0) { if (transitionState === 1) { transitionAlpha = Math.min(1.0, transitionAlpha + sceneFadeSpeed); if (transitionAlpha >= 1.0) { executeSceneChange(); transitionState = 2; } } else if (transitionState === 2) { transitionAlpha = Math.max(0.0, transitionAlpha - sceneFadeSpeed); if (transitionAlpha <= 0.0) transitionState = 0; } ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            if (transitionState > 0) { if (transitionState === 1) { transitionAlpha = Math.min(1.0, transitionAlpha + sceneFadeSpeed); if (transitionAlpha >= 1.0) { executeSceneChange(); transitionState = 2; } } else if (transitionState === 2) { transitionAlpha = Math.max(0.0, transitionAlpha - sceneFadeSpeed); if (transitionAlpha <= 0.0) transitionState = 0; } streamCtx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`; streamCtx.fillRect(0, 0, streamCanvas.width, streamCanvas.height); }
             
-            const isV15 = document.body.classList.contains('mode-v15');
-            const isRemote = !stream && appRole === 'control'; 
+            // 3. COPY hasil Stream Canvas (Kamera murni) ke Kanvas Bos
+            ctx.drawImage(streamCanvas, 0, 0, canvas.width, canvas.height);
 
+            // 4. OVERLAY MAGIC! 
             overlays.forEach(ov => { 
                 if (ov.visible) ov.alpha = Math.min(1.0, ov.alpha + overlayFadeSpeed); 
                 else ov.alpha = Math.max(0.0, ov.alpha - overlayFadeSpeed); 
                 
                 let drawAlpha = ov.alpha;
                 
-                if (isV15 && isRemote && !ov.visible) { drawAlpha = 0.4; }
-
-                if (drawAlpha > 0.0) { 
-                    ctx.globalAlpha = drawAlpha; let currentW, currentH; 
-                    if (ov.type === 'image' && ov.img) { 
-                        currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; 
-                        try { ctx.drawImage(ov.img, ov.x, ov.y, currentW, currentH); } catch(e) {}
-                    } else if (ov.type === 'text') { 
-                        const currentSize = ov.baseSize * ov.scale; ctx.font = `bold ${currentSize}px ${ov.font}`; ctx.fillStyle = ov.color; ctx.textBaseline = 'top'; currentW = ctx.measureText(ov.text).width; currentH = currentSize; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; ctx.fillText(ov.text, ov.x, ov.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; 
-                    } 
+                // Jika mata DICORET, jangan gambar di Stream Canvas, TAPI gambar remang-remang di Kanvas Bos
+                if (!ov.visible) {
+                    if (appRole === 'control') {
+                        ctx.globalAlpha = 0.4;
+                        let currentW, currentH; 
+                        if (ov.type === 'image' && ov.img) { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; try { ctx.drawImage(ov.img, ov.x, ov.y, currentW, currentH); } catch(e) {} } 
+                        else if (ov.type === 'text') { const currentSize = ov.baseSize * ov.scale; ctx.font = `bold ${currentSize}px ${ov.font}`; ctx.fillStyle = ov.color; ctx.textBaseline = 'top'; currentW = ctx.measureText(ov.text).width; currentH = currentSize; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; ctx.fillText(ov.text, ov.x, ov.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; } 
+                        if (ov === dragTarget) { ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(ov.x, ov.y, currentW, currentH); } 
+                        ctx.globalAlpha = 1.0;
+                    }
+                } 
+                // Jika mata NYALA, gambar FULL TERANG di Stream Canvas & Kanvas Bos
+                else if (drawAlpha > 0.0) { 
+                    streamCtx.globalAlpha = drawAlpha; ctx.globalAlpha = drawAlpha; let currentW, currentH; 
+                    if (ov.type === 'image' && ov.img) { currentW = ov.w * ov.scale; currentH = ov.h * ov.scale; try { streamCtx.drawImage(ov.img, ov.x, ov.y, currentW, currentH); ctx.drawImage(ov.img, ov.x, ov.y, currentW, currentH); } catch(e) {} } 
+                    else if (ov.type === 'text') { const currentSize = ov.baseSize * ov.scale; streamCtx.font = `bold ${currentSize}px ${ov.font}`; ctx.font = `bold ${currentSize}px ${ov.font}`; streamCtx.fillStyle = ov.color; ctx.fillStyle = ov.color; streamCtx.textBaseline = 'top'; ctx.textBaseline = 'top'; currentW = streamCtx.measureText(ov.text).width; currentH = currentSize; streamCtx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowColor = "rgba(0,0,0,0.8)"; streamCtx.shadowBlur = 4; ctx.shadowBlur = 4; streamCtx.shadowOffsetX = 2; ctx.shadowOffsetX = 2; streamCtx.shadowOffsetY = 2; ctx.shadowOffsetY = 2; streamCtx.fillText(ov.text, ov.x, ov.y); ctx.fillText(ov.text, ov.x, ov.y); streamCtx.shadowColor = "transparent"; ctx.shadowColor = "transparent"; streamCtx.shadowBlur = 0; ctx.shadowBlur = 0; streamCtx.shadowOffsetX = 0; ctx.shadowOffsetX = 0; streamCtx.shadowOffsetY = 0; ctx.shadowOffsetY = 0; } 
                     
-                    if (ov === dragTarget && (ov.visible || (isV15 && isRemote))) { 
-                        ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(ov.x, ov.y, currentW, currentH); 
-                    } 
-                    ctx.globalAlpha = 1.0; 
+                    if (ov === dragTarget && appRole === 'control') { ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(ov.x, ov.y, currentW, currentH); } 
+                    streamCtx.globalAlpha = 1.0; ctx.globalAlpha = 1.0; 
                 } 
             });
             
-            if (timerActive || timerSeconds > 0) { if (timerActive) { const now = Date.now(); const diff = Math.floor((now - lastTimerUpdate) / 1000); if (diff > 0) { timerSeconds += diff; lastTimerUpdate = now; } } const timerText = formatTime(timerSeconds); const currentSize = timerOverlay.baseSize * timerOverlay.scale; ctx.globalAlpha = timerOverlay.alpha; ctx.font = `bold ${currentSize}px monospace`; ctx.fillStyle = timerOverlay.color; ctx.textBaseline = 'top'; const timerWidth = ctx.measureText(timerText).width; const timerHeight = currentSize; ctx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1; ctx.fillText(timerText, timerOverlay.x, timerOverlay.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.globalAlpha = 1.0; if (timerOverlay === dragTarget) { ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(timerOverlay.x, timerOverlay.y, timerWidth, timerHeight); } }
+            if (timerActive || timerSeconds > 0) { if (timerActive) { const now = Date.now(); const diff = Math.floor((now - lastTimerUpdate) / 1000); if (diff > 0) { timerSeconds += diff; lastTimerUpdate = now; } } const timerText = formatTime(timerSeconds); const currentSize = timerOverlay.baseSize * timerOverlay.scale; streamCtx.globalAlpha = timerOverlay.alpha; ctx.globalAlpha = timerOverlay.alpha; streamCtx.font = `bold ${currentSize}px monospace`; ctx.font = `bold ${currentSize}px monospace`; streamCtx.fillStyle = timerOverlay.color; ctx.fillStyle = timerOverlay.color; streamCtx.textBaseline = 'top'; ctx.textBaseline = 'top'; const timerWidth = streamCtx.measureText(timerText).width; const timerHeight = currentSize; streamCtx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowColor = "rgba(0,0,0,0.9)"; streamCtx.shadowBlur = 4; ctx.shadowBlur = 4; streamCtx.shadowOffsetX = 1; ctx.shadowOffsetX = 1; streamCtx.shadowOffsetY = 1; ctx.shadowOffsetY = 1; streamCtx.fillText(timerText, timerOverlay.x, timerOverlay.y); ctx.fillText(timerText, timerOverlay.x, timerOverlay.y); streamCtx.shadowColor = "transparent"; ctx.shadowColor = "transparent"; streamCtx.shadowBlur = 0; ctx.shadowBlur = 0; streamCtx.shadowOffsetX = 0; ctx.shadowOffsetX = 0; streamCtx.shadowOffsetY = 0; ctx.shadowOffsetY = 0; streamCtx.globalAlpha = 1.0; ctx.globalAlpha = 1.0; if (timerOverlay === dragTarget && appRole === 'control') { ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(timerOverlay.x, timerOverlay.y, timerWidth, timerHeight); } }
             
             animationFrameId = requestAnimationFrame(drawFrame);
         } drawFrame();
@@ -1059,7 +1079,8 @@
                 }
 
                 setTimeout(() => {
-                    const canvasStream = canvas.captureStream(30);
+                    // AMBIL GAMBAR DARI STREAM CANVAS (KANVAS RAHASIA), BUKAN CANVAS UI
+                    const canvasStream = streamCanvas.captureStream(30);
                     if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) {
                         canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]);
                     } else if (stream && stream.getAudioTracks().length > 0) {
@@ -1085,7 +1106,6 @@
                 if (!isReconnecting && btnStream.classList.contains('hidden')) {
                     isReconnecting = true;
                     updateStatus('Sinyal Drop! Mencoba nyambung lagi...', 'text-yellow-600', 'fa-spinner fa-spin');
-                    console.log('Koneksi putus sesaat. Mencoba hubungkan kembali dalam 3 detik...');
 
                     if (liveRecorder && liveRecorder.state !== 'inactive') {
                         liveRecorder.stop();
@@ -1095,10 +1115,6 @@
                         mulaiStreaming();
                     }, 3000); 
                 }
-            };
-
-            liveSocket.onerror = (err) => {
-                console.error("WS Error:", err);
             };
         }
 
@@ -1120,7 +1136,10 @@
 
         // --- REKAM LOKAL DENGAN ANTI-ERROR TREBEDIT ---
         btnRecord.addEventListener('click', () => {
-            initAudio(); const canvasStream = canvas.captureStream(30); if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
+            initAudio(); 
+            // AMBIL GAMBAR DARI STREAM CANVAS (KANVAS RAHASIA)
+            const canvasStream = streamCanvas.captureStream(30); 
+            if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
             const options = { mimeType: 'video/webm; codecs=vp9' }; try { mediaRecorder = new MediaRecorder(canvasStream, options); } catch (e) { mediaRecorder = new MediaRecorder(canvasStream); }
             recordedChunks = []; mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
             mediaRecorder.onstop = saveRecording; mediaRecorder.start(); isRecording = true;
@@ -1134,11 +1153,9 @@
             const a = document.createElement('a'); 
             a.style.display = 'none'; 
             a.href = url; 
-            // Nama dibikin super unik pakai jam presisi (Date.now) biar TrebEdit ga ngambek
             a.download = `Kajian_Pro_${currentCamHeight}p_${Date.now()}.webm`; 
             document.body.appendChild(a); 
             
-            // Diberi jeda napas 100 milidetik biar TrebEdit nyadar ada tombol donlot
             setTimeout(() => {
                 a.click(); 
                 setTimeout(() => { 
@@ -1176,20 +1193,12 @@
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Mantra terlepas, bersiap mengunci lagi...');
-                    });
+                    wakeLock.addEventListener('release', () => { console.log('Mantra terlepas, bersiap mengunci lagi...'); });
                 }
             } catch (err) {}
         }
         window.addEventListener('load', requestWakeLock);
-        document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                requestWakeLock();
-            }
-        });
-
+        document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => {}); }); }
     </script>
 </body>
