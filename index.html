@@ -30,12 +30,15 @@
 
         #loadingDB { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
+        /* Pintu Masuk Pemilihan Peran */
+        #roleSelector { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); z-index: 100000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 2rem; }
+
         /* =========================================
            DUAL UI ARCHITECTURE - LIGHT THEME OBS
            ========================================= */
 
         /* ---> MODE V15 (DASHBOARD REMOTE) <--- */
-        body.mode-v15 { background-color: #e5e7eb; color: #1f2937; } /* Warna abu-abu klasik OBS */
+        body.mode-v15 { background-color: #e5e7eb; color: #1f2937; }
         body.mode-v15 #appHeader { display: flex; background-color: #f3f4f6; border-bottom: 1px solid #d1d5db; }
         body.mode-v15 #mainLayout { display: flex; flex-direction: column; padding: 1rem; gap: 1rem; height: calc(100vh - 74px); max-width: 80rem; margin: 0 auto; }
         @media (min-width: 768px) { body.mode-v15 #mainLayout { flex-direction: row; } }
@@ -48,24 +51,16 @@
         @media (min-width: 768px) { body.mode-v15 #panelWrapper { width: 50%; flex: none; } }
         body.mode-v15 #panelContainer { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; transform: none !important; position: relative; background: transparent; }
         
-        /* Panel Putih Klasik */
         body.mode-v15 .panel-card { background-color: #ffffff; padding: 1.25rem; border-radius: 0.5rem; border: 1px solid #d1d5db; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); }
         body.mode-v15 #btnToggleMenu, body.mode-v15 #panelHeaderTitle { display: none !important; }
 
-        /* ---> MODE V16 (FULLSCREEN KAMERA) <--- */
-        /* Biarkan V16 tetap gelap agar tidak menyilaukan saat dipakai sebagai kamera lapangan */
+        /* ---> MODE V16 (FULLSCREEN KAMERA SATELIT) <--- */
         body.mode-v16 { background-color: #000; color: #f3f4f6; }
         body.mode-v16 #appHeader { display: none; }
         body.mode-v16 #mainLayout { display: block; width: 100vw; height: 100vh; padding: 0; margin: 0; overflow: hidden; position: relative; }
         body.mode-v16 #canvasWrapper { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; border: none; border-radius: 0; }
         body.mode-v16 #canvasWrapper #outputCanvas { object-fit: cover; }
-        body.mode-v16 #panelWrapper { position: absolute; inset: 0; z-index: 40; pointer-events: none; display: flex; justify-content: flex-end; overflow: hidden; padding: 0; }
-        body.mode-v16 #panelContainer { width: 400px; max-width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-left: 1px solid #d1d5db; pointer-events: auto; display: flex; flex-direction: column; gap: 0; transform: translateX(100%); transition: transform 0.3s ease; color: #1f2937; }
-        body.mode-v16 #panelContainer.open { transform: translateX(0); }
-        body.mode-v16 .panel-content-scroll { overflow-y: auto; flex-grow: 1; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.5rem; }
-        body.mode-v16 .panel-card { padding: 0; border: none; background: transparent; box-shadow: none; border-bottom: 1px solid #d1d5db; padding-bottom: 1.5rem; border-radius: 0; }
-        body.mode-v16 #btnToggleMenu { display: flex; position: absolute; top: 1rem; right: 1rem; z-index: 50; }
-        body.mode-v16 #panelHeaderTitle { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(243, 244, 246, 0.9); border-bottom: 1px solid #d1d5db; flex-shrink: 0; }
+        body.mode-v16 #panelWrapper { display: none; }
 
         /* VU Meter */
         .vu-meter-container { height: 6px; width: 100%; background-color: #d1d5db; border-radius: 3px; overflow: hidden; margin-top: 5px; }
@@ -84,6 +79,23 @@
 
 <body id="body" class="mode-v15 font-sans antialiased h-[100dvh] w-screen overflow-hidden relative">
 
+    <!-- Pintu Masuk -->
+    <div id="roleSelector">
+        <div class="text-center max-w-md bg-white/10 p-8 rounded-xl backdrop-blur-md border border-white/20 shadow-2xl">
+            <i class="fa-solid fa-satellite-dish text-6xl text-blue-300 mb-4"></i>
+            <h1 class="text-3xl font-bold mb-2">Mini OBS Pro</h1>
+            <p class="text-blue-200 mb-8 text-sm">Pilih tugas perangkat ini di jaringan Anda.</p>
+            <div class="flex flex-col gap-4">
+                <button onclick="selectRole('control')" class="bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-bold text-lg transition shadow-lg flex items-center justify-center">
+                    <i class="fa-solid fa-sliders mr-3 text-2xl"></i> Control Room (Operator)
+                </button>
+                <button onclick="selectRole('satellite')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-lg font-bold text-lg transition shadow-lg flex items-center justify-center">
+                    <i class="fa-solid fa-camera mr-3 text-2xl"></i> Kamera Satelit (Lapangan)
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="loadingDB">
         <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-4"></i>
         <p class="text-gray-700 font-semibold animate-pulse">Memuat Gudang Penyimpanan...</p>
@@ -95,13 +107,15 @@
             <div id="statusBadgeV15" class="px-3 py-1 bg-white text-xs rounded-full font-semibold text-gray-600 border border-gray-300 shadow-sm">
                 <i class="fa-solid fa-circle text-gray-400 mr-1 text-[10px]"></i> Standby
             </div>
+            <!-- Indikator P2P -->
+            <div id="webrtcBadgeV15" class="px-3 py-1 bg-white text-xs rounded-full font-semibold text-gray-600 border border-gray-300 shadow-sm hidden">
+                <i class="fa-solid fa-satellite text-gray-400 mr-1"></i> Satelit Off
+            </div>
         </div>
-        <button onclick="switchMode('v16')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded font-bold transition shadow-sm text-sm border border-gray-300 flex items-center">
-            <i class="fa-solid fa-mobile-screen mr-2 text-blue-600"></i> Mode Layar Penuh
-        </button>
     </header>
 
-    <div id="mainLayout">
+    <!-- KUNCI: Disembunyikan dulu sampai dapet peran -->
+    <div id="mainLayout" class="hidden">
         
         <div id="canvasWrapper" class="group">
             <video id="videoSource" playsinline muted class="hidden"></video>
@@ -121,16 +135,6 @@
                 <i class="fa-solid fa-expand" id="fullscreenIcon"></i>
             </button>
 
-            <button id="btnToggleMenu" class="bg-blue-600/90 hover:bg-blue-700 backdrop-blur-md text-white w-12 h-12 rounded-full shadow-lg transition border border-blue-500 flex justify-center items-center">
-                <i class="fa-solid fa-gear text-xl"></i>
-            </button>
-            <button id="btnSwitchModeV16" onclick="switchMode('v15')" class="absolute top-4 left-4 z-50 bg-white/90 hover:bg-gray-100 backdrop-blur-md text-gray-800 px-4 py-2 rounded-full shadow-lg transition border border-gray-300 font-bold text-xs" style="display: none;">
-                <i class="fa-solid fa-arrow-left mr-2 text-blue-600"></i>Kembali ke Panel
-            </button>
-            <div id="statusBadgeV16" class="absolute bottom-10 left-4 z-50 px-4 py-2 bg-white/90 backdrop-blur-md text-xs rounded-full font-bold text-gray-800 border border-gray-300 shadow-lg pointer-events-none" style="display: none;">
-                <i class="fa-solid fa-circle text-gray-400 mr-2 text-[10px]"></i>Standby
-            </div>
-
             <div id="vuMeterWrapper" class="absolute bottom-2 left-2 right-2 hidden z-50 opacity-90">
                 <div class="vu-meter-container shadow-sm border border-gray-400">
                     <div id="vuMeterBar" class="vu-meter-bar"></div>
@@ -139,16 +143,7 @@
         </div>
 
         <div id="panelWrapper" class="custom-scrollbar">
-            
             <div id="panelContainer">
-                
-                <div id="panelHeaderTitle">
-                    <h1 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-sliders text-blue-600 mr-2"></i>Control Room</h1>
-                    <button id="btnCloseMenu" class="text-gray-500 hover:text-gray-800 bg-gray-200 hover:bg-gray-300 rounded-full w-8 h-8 flex items-center justify-center transition border border-gray-300">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-
                 <div class="panel-content-scroll custom-scrollbar">
                     
                     <div class="panel-card">
@@ -166,7 +161,6 @@
                         <h2 class="text-lg font-semibold mb-4 border-b border-gray-200 pb-2 text-gray-800"><i class="fa-solid fa-sliders mr-2 text-gray-500"></i>Pengaturan Sistem</h2>
                         
                         <div class="mb-4 bg-gray-50 p-3 rounded border border-gray-200">
-                            
                             <label class="block text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-display mr-1 text-gray-500"></i> Resolusi Kamera</label>
                             <select id="resolutionSelect" class="w-full bg-white border border-gray-300 text-gray-900 rounded text-sm py-2 px-3 focus:outline-none focus:border-blue-500 font-semibold cursor-pointer mb-3 shadow-sm">
                                 <option value="480">SD (854x480) - Super Ringan</option>
@@ -206,7 +200,6 @@
                                     <input type="range" id="camZoomInput" min="1.0" max="5.0" step="0.1" value="1.0" class="w-full accent-blue-600 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer">
                                     <i class="fa-solid fa-plus text-gray-400 text-xs cursor-pointer hover:text-gray-800" onclick="document.getElementById('camZoomInput').stepUp(); document.getElementById('camZoomInput').dispatchEvent(new Event('input'))"></i>
                                 </div>
-
                                 <div id="focusControlContainer" style="display: none;">
                                     <div class="flex justify-between items-center mb-2">
                                         <label class="text-xs font-bold text-gray-700"><i class="fa-solid fa-crosshairs mr-1 text-gray-500"></i> Mode Fokus</label>
@@ -219,22 +212,26 @@
                                         <span>Manual Kunci (M)</span>
                                         <span>Otomatis (A)</span>
                                     </div>
-                                    
                                     <div id="manualFocusSlider" style="display: none;" class="mt-2">
-                                        <label class="flex justify-between text-xs font-bold text-blue-600 mb-2">
-                                            <span>Geser untuk Kunci Fokus</span>
-                                        </label>
+                                        <label class="flex justify-between text-xs font-bold text-blue-600 mb-2"><span>Geser untuk Kunci Fokus</span></label>
                                         <div class="flex items-center gap-3 mb-2">
-                                            <i class="fa-solid fa-mountain text-gray-400 text-xs"></i>
-                                            <input type="range" id="camFocusInput" min="0" max="2" step="0.01" value="0.15" class="w-full accent-blue-600 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer">
-                                            <i class="fa-solid fa-user text-gray-400 text-xs"></i>
+                                            <i class="fa-solid fa-mountain text-gray-400 text-xs"></i><input type="range" id="camFocusInput" min="0" max="2" step="0.01" value="0.15" class="w-full accent-blue-600 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"><i class="fa-solid fa-user text-gray-400 text-xs"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <label class="block text-xs font-bold text-gray-700 mb-2 mt-4"><i class="fa-solid fa-key mr-1 text-gray-500"></i> RTMP URL (Wajib rtmps://)</label>
-                            <input type="text" id="rtmpInput" placeholder="rtmps://a.rtmp.youtube.com:443/live2/xxxx" class="w-full text-xs bg-white border border-gray-300 rounded px-3 py-3 focus:outline-none focus:border-blue-500 text-gray-900 font-mono shadow-sm">
+                            <!-- MULTI STREAMING INPUTS -->
+                            <div class="border-t border-gray-200 pt-4 mt-4">
+                                <label class="block text-xs font-bold text-gray-700 mb-2"><i class="fa-brands fa-youtube mr-1 text-red-600"></i> 1. RTMP YouTube (Wajib rtmps://)</label>
+                                <input type="text" id="rtmpYoutube" placeholder="rtmps://a.rtmp.youtube.com:443/live2/xxxx" class="w-full text-xs bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-900 font-mono shadow-sm mb-3">
+
+                                <label class="block text-xs font-bold text-gray-700 mb-2"><i class="fa-brands fa-facebook mr-1 text-blue-600"></i> 2. RTMP Facebook (Opsional)</label>
+                                <input type="text" id="rtmpFacebook" placeholder="rtmps://live-api-s.facebook.com:443/rtmp/xxxx" class="w-full text-xs bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-900 font-mono shadow-sm mb-3">
+
+                                <label class="block text-xs font-bold text-gray-700 mb-2"><i class="fa-brands fa-telegram mr-1 text-blue-400"></i> 3. RTMP Custom / Telegram (Opsional)</label>
+                                <input type="text" id="rtmpCustom" placeholder="rtmp://..." class="w-full text-xs bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-900 font-mono shadow-sm">
+                            </div>
                         </div>
 
                         <div class="flex gap-3 mb-4">
@@ -329,7 +326,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyBNzJkuhAnk0Mwfl5SXzzfWQ48zcSNCulo",
@@ -342,34 +339,31 @@
         };
         
         const app = initializeApp(firebaseConfig); const db = getDatabase(app);
-        window.fbDB = db; window.fbRef = ref; window.fbSet = set; window.fbOnValue = onValue; window.firebaseReady = true;
+        window.fbDB = db; window.fbRef = ref; window.fbSet = set; window.fbOnValue = onValue; 
+        window.fbPush = push; window.fbOnChildAdded = onChildAdded; window.firebaseReady = true;
     </script>
 
     <script>
-        // --- LOGIKA DUAL UI ---
-        const body = document.getElementById('body'); const panelContainer = document.getElementById('panelContainer');
-        const btnToggleMenu = document.getElementById('btnToggleMenu'); const btnCloseMenu = document.getElementById('btnCloseMenu');
-        const btnSwitchModeV16 = document.getElementById('btnSwitchModeV16'); const statusBadgeV16 = document.getElementById('statusBadgeV16');
-
-        function switchMode(mode) {
-            localStorage.setItem('obsUiMode', mode);
-            if(mode === 'v16') { body.classList.remove('mode-v15'); body.classList.add('mode-v16'); btnSwitchModeV16.style.display = 'flex'; statusBadgeV16.style.display = 'block'; panelContainer.classList.remove('open'); } 
-            else { body.classList.remove('mode-v16'); body.classList.add('mode-v15'); btnSwitchModeV16.style.display = 'none'; statusBadgeV16.style.display = 'none'; }
-            setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
-        }
-        switchMode(localStorage.getItem('obsUiMode') || 'v15');
-
-        btnToggleMenu.addEventListener('click', () => { panelContainer.classList.add('open'); btnToggleMenu.style.display = 'none'; });
-        btnCloseMenu.addEventListener('click', () => { panelContainer.classList.remove('open'); btnToggleMenu.style.display = 'flex'; });
-
+        const body = document.getElementById('body');
+        const mainLayout = document.getElementById('mainLayout');
+        const roleSelector = document.getElementById('roleSelector');
+        
         // --- DOM Elements ---
         const canvasContainer = document.getElementById('canvasContainer'); const btnFullscreen = document.getElementById('btnFullscreen'); const fullscreenIcon = document.getElementById('fullscreenIcon');
         const video = document.getElementById('videoSource'); const canvas = document.getElementById('outputCanvas'); const ctx = canvas.getContext('2d');
         const camOffPlaceholder = document.getElementById('camOffPlaceholder'); const camPlaceholderText = document.getElementById('camPlaceholderText');
-        const loadingDB = document.getElementById('loadingDB'); const rtmpInput = document.getElementById('rtmpInput'); const camZoomInput = document.getElementById('camZoomInput'); const lblCamZoom = document.getElementById('lblCamZoom');
+        const loadingDB = document.getElementById('loadingDB'); 
+        const rtmpYoutube = document.getElementById('rtmpYoutube');
+        const rtmpFacebook = document.getElementById('rtmpFacebook');
+        const rtmpCustom = document.getElementById('rtmpCustom');
+        const camZoomInput = document.getElementById('camZoomInput'); const lblCamZoom = document.getElementById('lblCamZoom');
         
         let overlays = []; let dragTarget = null; let dragOffsetX = 0; let dragOffsetY = 0; let isRemoteAction = false; let camZoom = 1.0;
         let stream = null; let liveSocket = null; let liveRecorder = null; let mediaRecorder = null; let isRecording = false;
+
+        let appRole = null; 
+        let peerConnection = null; 
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 
         localforage.config({ name: 'MiniObsStudio', storeName: 'mediaFiles' });
 
@@ -401,7 +395,7 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // --- MIC SELECTOR (HARD MUTE INTERNAL) ---
+        // --- MIC SELECTOR ---
         const audioInputSelect = document.getElementById('audioInputSelect');
         let knownAudioDevices = [];
 
@@ -421,7 +415,7 @@
                 knownAudioDevices = audioInputs.map(d => d.deviceId);
                 if (autoSelectId) { audioInputSelect.value = autoSelectId; if (stream) { btnStopCam.click(); setTimeout(() => btnStartCam.click(), 500); } } 
                 else if ([...audioInputSelect.options].some(o => o.value === previousValue)) { audioInputSelect.value = previousValue; }
-            } catch (e) { console.error("Gagal mendata mic:", e); }
+            } catch (e) {}
         }
         navigator.mediaDevices.addEventListener('devicechange', getAudioDevices);
         getAudioDevices();
@@ -447,7 +441,7 @@
                     manualFocusSlider.style.display = 'block';
                     if (capabilities.focusMode.includes('manual')) videoTrack.applyConstraints({ advanced: [{ focusMode: 'manual', focusDistance: parseFloat(camFocusInput.value) }] });
                 }
-            } catch (err) { console.error("Gagal set fokus:", err); }
+            } catch (err) { }
         }
 
         focusModeToggle.addEventListener('change', () => { applyFocusSettings(); if(!isRemoteAction) syncSettingsToFirebase(); });
@@ -458,6 +452,8 @@
 
         btnStartCam.addEventListener('click', async () => {
             try {
+                if(peerConnection) { peerConnection.close(); peerConnection = null; document.getElementById('webrtcBadgeV15').innerHTML = '<i class="fa-solid fa-satellite text-gray-400 mr-1"></i> Satelit Off'; }
+                
                 initAudio(); 
                 const selectedMic = audioInputSelect.value;
                 const audioConstraints = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
@@ -469,7 +465,7 @@
                 video.srcObject = stream;
                 
                 video.onloadedmetadata = async () => {
-                    video.play(); 
+                    video.play().catch(e => {}); 
                     if (micNode) { micNode.disconnect(); micNode = null; }
                     if (stream.getAudioTracks().length > 0) {
                         stream.getAudioTracks().forEach(track => { track.enabled = true; });
@@ -495,15 +491,11 @@
                     if (!liveSocket) updateStatus(`Kamera Aktif (${video.videoWidth}x${video.videoHeight})`, 'text-green-600', 'fa-video');
                     vuMeterWrapper.classList.remove('hidden'); getAudioDevices();
                 };
-            } catch (err) { console.error(err); camPlaceholderText.innerText = "Kamera Belum Aktif"; alert("Gagal akses kamera/mic Bos!"); }
+            } catch (err) { camPlaceholderText.innerText = "Kamera Belum Aktif"; alert("Gagal akses kamera/mic Bos!"); }
         });
 
-        // --- SIHIR PENEMBUS TIRAI LAYAR (MODE PANEL) ---
         const tiraiPenutup = document.getElementById('camOffPlaceholder');
-        if (tiraiPenutup) {
-            tiraiPenutup.style.backgroundColor = 'transparent'; // Biar jadi kaca bening, logo di kanvas jadi kelihatan
-            tiraiPenutup.style.pointerEvents = 'none'; // Biar tembus sentuhan jari, timer jadi bisa digeser
-        }
+        if (tiraiPenutup) { tiraiPenutup.style.backgroundColor = 'transparent'; tiraiPenutup.style.pointerEvents = 'none'; }
 
         btnStopCam.addEventListener('click', () => {
             if (stream) stream.getTracks().forEach(track => track.stop()); stream = null; videoTrack = null;
@@ -535,17 +527,7 @@
         const mediaInputsContainer = document.getElementById('mediaInputsContainer'); const sceneNames = { muqoddimah: 'MUQODDIMAH', intro: 'INTRO', pause: 'PAUSE', outro: 'OUTRO' };
         
         Object.keys(mediaScenes).forEach(key => {
-            const html = `
-                <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded border border-gray-200 shadow-sm">
-                    <div class="flex justify-between items-center border-b border-gray-200 pb-2">
-                        <label class="text-xs font-bold text-gray-700"><i class="fa-solid fa-film mr-1 text-gray-500"></i> ${sceneNames[key]}</label>
-                        <div><button id="${key}PipBtn" onclick="toggleMediaPip('${key}')" class="text-gray-400 hover:text-green-600 transition px-2 mr-1"><i class="fa-solid fa-compress" id="${key}PipIcon"></i></button><button id="${key}VisibilityBtn" onclick="toggleMediaVisibility('${key}')" class="text-blue-600 hover:text-blue-700 transition px-2"><i class="fa-solid fa-eye" id="${key}EyeIcon"></i></button></div>
-                    </div>
-                    <input type="file" id="${key}Input" accept="video/mp4, video/webm" class="block w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-200 file:text-gray-800 border border-gray-300 bg-white rounded cursor-pointer">
-                    <p class="text-[10px] text-green-600 mt-1 hidden font-bold" id="${key}SavedMark"><i class="fa-solid fa-check"></i> Tersimpan</p>
-                    <div class="flex gap-3 items-end mt-1"><div class="flex-grow"><label class="flex justify-between text-[10px] font-bold text-gray-600 mb-1"><span>Kecepatan Muncul</span><span id="${key}SpeedLbl" class="text-blue-600">Normal</span></label><input type="range" id="${key}FadeSpeed" min="0.01" max="0.3" step="0.01" value="0.1" class="w-full accent-blue-600 h-1.5 bg-gray-300 rounded-lg appearance-none cursor-pointer" oninput="updateMediaFadeSpeed('${key}', this.value)"></div>
-                    <div class="w-24 flex-shrink-0"><label class="block text-[10px] font-bold text-gray-600 mb-1">Putar</label><select id="${key}Playback" class="w-full bg-white border border-gray-300 text-gray-800 rounded text-xs py-1.5 px-1 focus:outline-none focus:border-blue-500 cursor-pointer shadow-sm"><option value="loop">Loop</option><option value="once">1x</option></select></div></div>
-                </div>`;
+            const html = `<div class="flex flex-col gap-2 bg-gray-50 p-3 rounded border border-gray-200 shadow-sm"><div class="flex justify-between items-center border-b border-gray-200 pb-2"><label class="text-xs font-bold text-gray-700"><i class="fa-solid fa-film mr-1 text-gray-500"></i> ${sceneNames[key]}</label><div><button id="${key}PipBtn" onclick="toggleMediaPip('${key}')" class="text-gray-400 hover:text-green-600 transition px-2 mr-1"><i class="fa-solid fa-compress" id="${key}PipIcon"></i></button><button id="${key}VisibilityBtn" onclick="toggleMediaVisibility('${key}')" class="text-blue-600 hover:text-blue-700 transition px-2"><i class="fa-solid fa-eye" id="${key}EyeIcon"></i></button></div></div><input type="file" id="${key}Input" accept="video/mp4, video/webm" class="block w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-200 file:text-gray-800 border border-gray-300 bg-white rounded cursor-pointer"><p class="text-[10px] text-green-600 mt-1 hidden font-bold" id="${key}SavedMark"><i class="fa-solid fa-check"></i> Tersimpan</p><div class="flex gap-3 items-end mt-1"><div class="flex-grow"><label class="flex justify-between text-[10px] font-bold text-gray-600 mb-1"><span>Kecepatan Muncul</span><span id="${key}SpeedLbl" class="text-blue-600">Normal</span></label><input type="range" id="${key}FadeSpeed" min="0.01" max="0.3" step="0.01" value="0.1" class="w-full accent-blue-600 h-1.5 bg-gray-300 rounded-lg appearance-none cursor-pointer" oninput="updateMediaFadeSpeed('${key}', this.value)"></div><div class="w-24 flex-shrink-0"><label class="block text-[10px] font-bold text-gray-600 mb-1">Putar</label><select id="${key}Playback" class="w-full bg-white border border-gray-300 text-gray-800 rounded text-xs py-1.5 px-1 focus:outline-none focus:border-blue-500 cursor-pointer shadow-sm"><option value="loop">Loop</option><option value="once">1x</option></select></div></div></div>`;
             mediaInputsContainer.insertAdjacentHTML('beforeend', html);
         });
 
@@ -563,7 +545,10 @@
         
         const sceneSpeedInput = document.getElementById('sceneSpeedInput'); const overlaySpeedInput = document.getElementById('overlaySpeedInput'); let sceneFadeSpeed = parseFloat(sceneSpeedInput.value); let overlayFadeSpeed = parseFloat(overlaySpeedInput.value);
 
-        rtmpInput.addEventListener('input', () => { if(!isRemoteAction) syncSettingsToFirebase(); });
+        rtmpYoutube.addEventListener('input', () => { if(!isRemoteAction) syncSettingsToFirebase(); });
+        rtmpFacebook.addEventListener('input', () => { if(!isRemoteAction) syncSettingsToFirebase(); });
+        rtmpCustom.addEventListener('input', () => { if(!isRemoteAction) syncSettingsToFirebase(); });
+        
         camZoomInput.addEventListener('input', (e) => { camZoom = parseFloat(e.target.value); lblCamZoom.innerText = camZoom.toFixed(1) + 'x'; if(!isRemoteAction) syncSettingsToFirebase(); });
         sceneSpeedInput.addEventListener('input', (e) => { sceneFadeSpeed = parseFloat(e.target.value); let label = "Normal"; if(sceneFadeSpeed < 0.03) label = "Lambat"; else if(sceneFadeSpeed > 0.1) label = "Cepat"; document.getElementById('lblSceneSpeed').innerText = label; if(!isRemoteAction) syncSettingsToFirebase(); });
         overlaySpeedInput.addEventListener('input', (e) => { overlayFadeSpeed = parseFloat(e.target.value); let label = "Normal"; if(overlayFadeSpeed < 0.05) label = "Lambat"; else if(overlayFadeSpeed > 0.2) label = "Cepat"; document.getElementById('lblOverlaySpeed').innerText = label; if(!isRemoteAction) syncSettingsToFirebase(); });
@@ -576,8 +561,9 @@
         function syncSettingsToFirebase() { 
             if (!window.firebaseReady) return; 
             window.fbSet(window.fbRef(window.fbDB, 'studio/settings'), { 
-                res: resolutionSelect.value, sceneSpeed: sceneSpeedInput.value, overlaySpeed: overlaySpeedInput.value, timerColor: timerColorInput.value, timerAlpha: timerAlphaInput.value, rtmpUrl: rtmpInput.value, camZoom: camZoomInput.value,
-                focusAuto: focusModeToggle.checked, focusDist: camFocusInput.value, camFilter: filterSelectEl ? filterSelectEl.value : 'none'
+                res: resolutionSelect.value, sceneSpeed: sceneSpeedInput.value, overlaySpeed: overlaySpeedInput.value, timerColor: timerColorInput.value, timerAlpha: timerAlphaInput.value, 
+                rtmpYt: rtmpYoutube.value, rtmpFb: rtmpFacebook.value, rtmpTg: rtmpCustom.value, 
+                camZoom: camZoomInput.value, focusAuto: focusModeToggle.checked, focusDist: camFocusInput.value, camFilter: filterSelectEl ? filterSelectEl.value : 'none'
             }); 
         }
 
@@ -586,7 +572,7 @@
             const overlayData = overlays.map(o => ({
                 id: o.id, type: o.type, name: o.name, text: o.text || '', font: o.font || '', color: o.color || '',
                 x: o.x, y: o.y, w: o.w, h: o.h, baseSize: o.baseSize || 50, scale: o.scale, visible: o.visible, alpha: o.alpha,
-                srcBase64: o.srcBase64 || '' // <--- INI DIA MUATAN SAKTINYA BOS!
+                srcBase64: o.srcBase64 || '' 
             }));
             window.fbSet(window.fbRef(window.fbDB, 'studio/allOverlays'), overlayData);
             saveImagesToIndexedDB();
@@ -605,7 +591,9 @@
                     if (s.overlaySpeed && overlaySpeedInput.value !== s.overlaySpeed) { overlaySpeedInput.value = s.overlaySpeed; overlaySpeedInput.dispatchEvent(new Event('input')); }
                     if (s.timerColor && timerColorInput.value !== s.timerColor) { timerColorInput.value = s.timerColor; timerOverlay.color = s.timerColor; }
                     if (s.timerAlpha && timerAlphaInput.value !== s.timerAlpha) { timerAlphaInput.value = s.timerAlpha; timerAlphaInput.dispatchEvent(new Event('input')); }
-                    if (s.rtmpUrl && rtmpInput.value !== s.rtmpUrl) { rtmpInput.value = s.rtmpUrl; }
+                    if (s.rtmpYt !== undefined && rtmpYoutube.value !== s.rtmpYt) { rtmpYoutube.value = s.rtmpYt; }
+                    if (s.rtmpFb !== undefined && rtmpFacebook.value !== s.rtmpFb) { rtmpFacebook.value = s.rtmpFb; }
+                    if (s.rtmpTg !== undefined && rtmpCustom.value !== s.rtmpTg) { rtmpCustom.value = s.rtmpTg; }
                     if (s.camZoom && camZoomInput.value !== s.camZoom) { camZoomInput.value = s.camZoom; camZoomInput.dispatchEvent(new Event('input')); }
                     if (s.focusAuto !== undefined && focusModeToggle.checked !== s.focusAuto) { focusModeToggle.checked = s.focusAuto; applyFocusSettings(); }
                     if (s.focusDist && camFocusInput.value !== s.focusDist) { camFocusInput.value = s.focusDist; applyFocusSettings(); }
@@ -619,10 +607,8 @@
                     overlays = remoteOverlays.map(ro => {
                         const existing = overlays.find(o => o.id === ro.id);
                         if (existing) {
-                            // Update posisi tapi pertahankan file gambar aslinya
                             return { ...existing, ...ro, img: existing.img };
                         } else if (ro.type === 'image' && ro.srcBase64) {
-                            // JALUR SAKTI: Rakit gambar instan dari teks Base64 untuk HP yang belum punya file-nya!
                             const img = new Image();
                             img.src = ro.srcBase64;
                             return { ...ro, img: img }; 
@@ -645,17 +631,15 @@
                 }
             });
             
-            // SINKRONISASI PINDAH ADEGAN (SCENE) ANTAR PERANGKAT
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/currentScene'), (snapshot) => {
                 const remoteScene = snapshot.val();
                 if (remoteScene && remoteScene !== currentScene && remoteScene !== pendingScene) {
                     isRemoteAction = true;
-                    changeScene(remoteScene); // <--- HP Oppo disuruh ikut pindah adegan!
+                    changeScene(remoteScene); 
                     isRemoteAction = false;
                 }
             });
 
-            // SINKRONISASI TIMER ANTAR PERANGKAT
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/timerState'), (snapshot) => {
                 const ts = snapshot.val();
                 if (ts && !isRemoteAction) {
@@ -676,33 +660,26 @@
                 }
             });
 
-            // SINKRONISASI TOMBOL LIVE STREAMING ANTAR PERANGKAT
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/streamCommand'), (snapshot) => {
                 const cmd = snapshot.val();
                 if (cmd) {
                     if (cmd.action === 'start') {
-                        // 1. Ubah tombol UI di KEDUA perangkat
                         btnStream.classList.add('hidden');
                         btnRecord.classList.add('hidden');
                         btnStopStream.classList.remove('hidden');
                         
-                        // 2. HANYA perangkat yang KAMERANYA AKTIF yang melakukan koneksi ke VPS
-                        if (stream && !liveSocket) {
-                            const rtmpUrl = rtmpInput.value.trim();
+                        if (stream && !liveSocket && appRole === 'control') {
                             initAudio();
                             isReconnecting = false;
-                            mulaiStreaming(rtmpUrl);
+                            mulaiStreaming();
                         } else if (!stream) {
-                            // Perangkat Panel cuma update tulisan status
                             updateStatus('ON AIR (Remote)', 'text-red-600', 'fa-broadcast-tower fa-fade');
                         }
                     } else if (cmd.action === 'stop') {
-                        // 1. Kembalikan tombol UI di KEDUA perangkat
                         btnStream.classList.remove('hidden');
                         btnRecord.classList.remove('hidden');
                         btnStopStream.classList.add('hidden');
                         
-                        // 2. HANYA perangkat yang lagi ngirim stream yang dimatikan koneksinya
                         if (liveSocket || liveRecorder) {
                             stopLiveStream();
                         } else if (!stream) {
@@ -720,9 +697,135 @@
                 if (savedImgOverlays && savedImgOverlays.length > 0) {
                      for (let ov of savedImgOverlays) { if (ov.blobData) { const img = new Image(); const objectURL = URL.createObjectURL(ov.blobData); await new Promise((resolve) => { img.onload = () => { overlays.push({ id: ov.id, type: 'image', name: ov.name, img: img, x: ov.x, y: ov.y, w: ov.w, h: ov.h, scale: ov.scale, visible: ov.visible, alpha: ov.alpha, blobData: ov.blobData }); resolve(); }; img.src = objectURL; }); } } renderOverlayListUI();
                 }
-            } catch (err) {} finally { loadingDB.style.display = 'none'; setupRemoteControlReceiver(); }
+            } catch (err) {} finally { 
+                loadingDB.style.display = 'none'; 
+                roleSelector.style.display = 'flex';
+            }
         }
         window.addEventListener('load', loadDatabaseBasement);
+
+        window.selectRole = function(role) {
+            appRole = role;
+            roleSelector.style.display = 'none';
+            mainLayout.classList.remove('hidden');
+            
+            if (role === 'control') {
+                document.getElementById('webrtcBadgeV15').classList.remove('hidden');
+                
+                // MANTRA ANTI-GHOST OFFER
+                if (window.firebaseReady) {
+                    window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc'), null).then(() => {
+                        setupRemoteControlReceiver();
+                        initWebRTC_ControlRoom();
+                    });
+                } else {
+                    setupRemoteControlReceiver();
+                    initWebRTC_ControlRoom();
+                }
+
+            } else {
+                body.classList.remove('mode-v15');
+                body.classList.add('mode-v16'); 
+                
+                const satPanel = document.createElement('div');
+                satPanel.className = 'absolute bottom-12 left-0 w-full flex flex-col items-center z-50 pointer-events-auto bg-black/50 p-4';
+                satPanel.innerHTML = `
+                    <div class="text-center mb-4">
+                        <p class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-satellite-dish fa-fade"></i> MODE KAMERA SATELIT</p>
+                        <p class="text-white text-xs">Video akan otomatis dikirim ke Control Room.</p>
+                    </div>
+                    <button id="btnSatStart" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg border-2 border-emerald-400"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
+                `;
+                document.getElementById('canvasWrapper').appendChild(satPanel);
+                document.getElementById('btnSatStart').addEventListener('click', startSatelliteMode);
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+            }
+        }
+
+        async function startSatelliteMode() {
+            try {
+                document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lensa...';
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: true });
+                video.srcObject = stream; 
+                video.play().catch(e => {});
+                camOffPlaceholder.classList.add('hidden');
+                document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Menyambung...';
+
+                peerConnection = new RTCPeerConnection(rtcConfig);
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) window.fbPush(window.fbRef(window.fbDB, 'studio/webrtc/ice_satellite'), event.candidate.toJSON());
+                };
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc'), null); 
+                await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc/offer'), { type: offer.type, sdp: offer.sdp });
+
+                window.fbOnValue(window.fbRef(window.fbDB, 'studio/webrtc/answer'), async (snapshot) => {
+                    const answer = snapshot.val();
+                    if (answer && peerConnection.signalingState !== 'stable') {
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                        document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-check text-green-400"></i> P2P Aktif';
+                        document.getElementById('btnSatStart').classList.replace('bg-emerald-600', 'bg-gray-900');
+                    }
+                });
+
+                window.fbOnChildAdded(window.fbRef(window.fbDB, 'studio/webrtc/ice_control'), (data) => {
+                    if (data.val()) peerConnection.addIceCandidate(new RTCIceCandidate(data.val()));
+                });
+            } catch (err) { alert("Gagal akses kamera: " + err.message); }
+        }
+
+        function initWebRTC_ControlRoom() {
+            const statusBadge = document.getElementById('webrtcBadgeV15'); 
+            window.fbOnValue(window.fbRef(window.fbDB, 'studio/webrtc/offer'), async (snapshot) => {
+                const offer = snapshot.val();
+                if (offer && appRole === 'control') {
+                    statusBadge.innerHTML = '<i class="fa-solid fa-satellite-dish text-yellow-500 fa-fade mr-1"></i> Menyambungkan Satelit...';
+                    if (peerConnection) peerConnection.close();
+                    peerConnection = new RTCPeerConnection(rtcConfig);
+
+                    peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) window.fbPush(window.fbRef(window.fbDB, 'studio/webrtc/ice_control'), event.candidate.toJSON());
+                    };
+
+                    peerConnection.ontrack = (event) => {
+                        video.srcObject = event.streams[0];
+                        video.play().catch(e => {});
+                        camOffPlaceholder.classList.add('hidden');
+                        statusBadge.innerHTML = '<i class="fa-solid fa-satellite text-green-500 mr-1"></i> Satelit Aktif (P2P)';
+                        
+                        if(stream && stream !== event.streams[0]) {
+                            stream.getTracks().forEach(t => t.stop());
+                        }
+                        stream = event.streams[0];
+                        document.getElementById('btnStartCam').classList.add('hidden');
+                        document.getElementById('btnStopCam').classList.remove('hidden');
+                        
+                        if (micNode) { micNode.disconnect(); micNode = null; }
+                        initAudio();
+                        if (audioCtx && stream.getAudioTracks().length > 0) {
+                            micNode = audioCtx.createMediaStreamSource(stream); 
+                            micNode.connect(mixedAudioDest); 
+                        }
+                        vuMeterWrapper.classList.remove('hidden');
+                    };
+
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    
+                    await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc/answer'), { type: answer.type, sdp: answer.sdp });
+
+                    window.fbOnChildAdded(window.fbRef(window.fbDB, 'studio/webrtc/ice_satellite'), (data) => {
+                        if (data.val()) peerConnection.addIceCandidate(new RTCIceCandidate(data.val()));
+                    });
+                }
+            });
+        }
 
         async function saveImagesToIndexedDB() {
             const imgOverlays = overlays.filter(o => o.type === 'image'); const dataToSave = [];
@@ -748,7 +851,6 @@
                     let w = img.width; let h = img.height; 
                     if (h > 200) { const ratio = 200 / h; h = 200; w = w * ratio; } 
                     
-                    // Kita tempelkan teks gambar (srcBase64) ke dalam gudang Firebase
                     overlays.push({ 
                         id: Date.now(), 
                         type: 'image', 
@@ -764,7 +866,7 @@
                 };
                 img.src = event.target.result;
             };
-            reader.readAsDataURL(file); // Sihir pengubah file ke teks
+            reader.readAsDataURL(file); 
         });
         
         const textInput = document.getElementById('textInput'); const fontSelect = document.getElementById('fontSelect'); const textColor = document.getElementById('textColor'); const btnAddText = document.getElementById('btnAddText'); const btnClearOverlays = document.getElementById('btnClearOverlays');
@@ -794,7 +896,7 @@
         function getCanvasCoords(e) { const rect = canvas.getBoundingClientRect(); let ratioX = canvas.width / rect.width; let ratioY = canvas.height / rect.height; const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * ratioX, y: (clientY - rect.top) * ratioY }; }
         function handleDragStart(e) {
             const coords = getCanvasCoords(e);
-            const pad = 20; // Bantalan ekstra 20px biar teks/timer gampang dipencet jari!
+            const pad = 20; 
             
             if (timerActive || timerSeconds > 0) { 
                 ctx.font = `bold ${timerOverlay.baseSize * timerOverlay.scale}px monospace`; 
@@ -806,12 +908,11 @@
             }
             
             const isV15 = document.body.classList.contains('mode-v15');
-            const isRemote = !stream;
+            const isRemote = !stream && appRole === 'control'; 
 
             for (let i = overlays.length - 1; i >= 0; i--) { 
                 const ov = overlays[i]; 
                 
-                // Hanya bisa di-drag kalau visible, ATAU sedang di mode Remote
                 if (!ov.visible && !(isV15 && isRemote)) continue; 
 
                 let currentW, currentH; 
@@ -835,7 +936,7 @@
         window.changeScene = function(scene) { initAudio(); if (currentScene === scene || pendingScene === scene) return; pendingScene = scene; transitionState = 1; document.querySelectorAll('.scene-btn').forEach(btn => btn.classList.remove('active')); document.getElementById('btnScene' + scene.charAt(0).toUpperCase() + scene.slice(1)).classList.add('active'); if (!isRemoteAction) syncSceneToFirebase(scene); };
         function executeSceneChange() { currentScene = pendingScene; if (currentScene === 'live' && !stream) camOffPlaceholder.classList.remove('hidden'); else camOffPlaceholder.classList.add('hidden'); if (stream) stream.getAudioTracks().forEach(track => { track.enabled = (currentScene === 'live'); }); Object.keys(mediaScenes).forEach(key => { const vid = mediaScenes[key]; if (vid.src) { vid.pause(); vid.currentTime = 0; } }); checkPlayback(); }
 
-        function updateStatus(text, colorClass, iconClass) { const html = `<i class="fa-solid ${iconClass} ${colorClass} mr-2 text-[10px]"></i>${text}`; statusBadgeV15.innerHTML = html; statusBadgeV16.innerHTML = html; }
+        function updateStatus(text, colorClass, iconClass) { const html = `<i class="fa-solid ${iconClass} ${colorClass} mr-2 text-[10px]"></i>${text}`; document.getElementById('statusBadgeV15').innerHTML = html; }
         function updateVuMeter() { if (analyser && dataArray && stream && currentScene === 'live') { analyser.getByteFrequencyData(dataArray); let sum = 0; for(let i = 0; i < dataArray.length; i++) sum += dataArray[i]; let percent = ((sum / dataArray.length) / 128) * 100; if (percent > 100) percent = 100; vuMeterBar.style.width = percent + '%'; } else { vuMeterBar.style.width = '0%'; } }
 
         const drawScene = (sceneId, isBackground) => {
@@ -869,7 +970,7 @@
             if (transitionState > 0) { if (transitionState === 1) { transitionAlpha = Math.min(1.0, transitionAlpha + sceneFadeSpeed); if (transitionAlpha >= 1.0) { executeSceneChange(); transitionState = 2; } } else if (transitionState === 2) { transitionAlpha = Math.max(0.0, transitionAlpha - sceneFadeSpeed); if (transitionAlpha <= 0.0) transitionState = 0; } ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
             
             const isV15 = document.body.classList.contains('mode-v15');
-            const isRemote = !stream; // JURUS PISAH LAYAR: Tanda kalau perangkat ini tidak punya akses kamera
+            const isRemote = !stream && appRole === 'control'; 
 
             overlays.forEach(ov => { 
                 if (ov.visible) ov.alpha = Math.min(1.0, ov.alpha + overlayFadeSpeed); 
@@ -877,7 +978,6 @@
                 
                 let drawAlpha = ov.alpha;
                 
-                // Kalau ini adalah Remote Control, paksakan terlihat 40% agar mudah digeser
                 if (isV15 && isRemote && !ov.visible) { drawAlpha = 0.4; }
 
                 if (drawAlpha > 0.0) { 
@@ -889,7 +989,6 @@
                         const currentSize = ov.baseSize * ov.scale; ctx.font = `bold ${currentSize}px ${ov.font}`; ctx.fillStyle = ov.color; ctx.textBaseline = 'top'; currentW = ctx.measureText(ov.text).width; currentH = currentSize; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; ctx.fillText(ov.text, ov.x, ov.y); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; 
                     } 
                     
-                    // Kotak kuning saat di-drag juga hanya muncul kalau visible atau sedang di Remote
                     if (ov === dragTarget && (ov.visible || (isV15 && isRemote))) { 
                         ctx.strokeStyle = "rgba(255, 235, 59, 0.8)"; ctx.lineWidth = 4; ctx.strokeRect(ov.x, ov.y, currentW, currentH); 
                     } 
@@ -902,31 +1001,26 @@
             animationFrameId = requestAnimationFrame(drawFrame);
         } drawFrame();
 
-        // --- YOUTUBE LIVE ---
+        // --- MULTI STREAMING (JSON PAYLOAD) ---
         let isReconnecting = false;
         let reconnectTimeout = null;
         let pingInterval = null; 
 
-        // TOMBOL GO LIVE SEKARANG NGIRIM SINYAL KE FIREBASE DULU
         btnStream.addEventListener('click', () => {
-            const rtmpUrl = rtmpInput.value.trim();
-            if (!rtmpUrl) { alert('Isi dulu URL RTMP dan Stream Key dari YouTube!'); return; }
+            const ytUrl = rtmpYoutube.value.trim();
+            if (!ytUrl) { alert('Isi dulu URL RTMP YouTube nya, Bos!'); return; }
             if (window.firebaseReady) {
-                // Tembak perintah "start" ke awan Firebase
                 window.fbSet(window.fbRef(window.fbDB, 'studio/streamCommand'), { action: 'start', time: Date.now() });
             }
         });
 
-        // TOMBOL STOP LIVE JUGA NGIRIM SINYAL KE FIREBASE
-        const btnStopStream = document.getElementById('btnStopStream');
         btnStopStream.addEventListener('click', () => {
             if (window.firebaseReady) {
-                // Tembak perintah "stop" ke awan Firebase
                 window.fbSet(window.fbRef(window.fbDB, 'studio/streamCommand'), { action: 'stop', time: Date.now() });
             }
         });
 
-        function mulaiStreaming(rtmpUrl) {
+        function mulaiStreaming() {
             updateStatus(isReconnecting ? 'Koneksi terputus! Menyambung ulang...' : 'Menyambung ke VPS...', 'text-yellow-600', 'fa-spinner fa-spin');
             
             try {
@@ -946,7 +1040,12 @@
                 btnRecord.classList.add('hidden');
                 btnStopStream.classList.remove('hidden');
                 
-                liveSocket.send(rtmpUrl);
+                const payload = JSON.stringify({
+                    youtube: rtmpYoutube.value.trim(),
+                    facebook: rtmpFacebook.value.trim(),
+                    custom: rtmpCustom.value.trim()
+                });
+                liveSocket.send(payload);
 
                 if (pingInterval) clearInterval(pingInterval);
                 pingInterval = setInterval(() => {
@@ -993,7 +1092,7 @@
                     }
 
                     reconnectTimeout = setTimeout(() => {
-                        mulaiStreaming(rtmpUrl);
+                        mulaiStreaming();
                     }, 3000); 
                 }
             };
@@ -1019,7 +1118,7 @@
             updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-600' : 'text-gray-400', stream ? 'fa-video' : 'fa-circle');
         }
 
-        // --- REKAM LOKAL ---
+        // --- REKAM LOKAL DENGAN ANTI-ERROR TREBEDIT ---
         btnRecord.addEventListener('click', () => {
             initAudio(); const canvasStream = canvas.captureStream(30); if (mixedAudioDest && mixedAudioDest.stream.getAudioTracks().length > 0) canvasStream.addTrack(mixedAudioDest.stream.getAudioTracks()[0]); else if (stream && stream.getAudioTracks().length > 0) canvasStream.addTrack(stream.getAudioTracks()[0]);
             const options = { mimeType: 'video/webm; codecs=vp9' }; try { mediaRecorder = new MediaRecorder(canvasStream, options); } catch (e) { mediaRecorder = new MediaRecorder(canvasStream); }
@@ -1028,7 +1127,26 @@
             btnRecord.classList.add('hidden'); btnStream.classList.add('hidden'); btnStopRecord.classList.remove('hidden'); updateStatus('Merekam...', 'text-red-600', 'fa-circle-dot');
         });
         btnStopRecord.addEventListener('click', () => { if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; btnRecord.classList.remove('hidden'); btnStream.classList.remove('hidden'); btnStopRecord.classList.add('hidden'); updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-600' : 'text-gray-400', stream ? 'fa-video' : 'fa-circle'); } });
-        function saveRecording() { const blob = new Blob(recordedChunks, { type: 'video/webm' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style = 'display: none'; a.href = url; a.download = `Kajian_Pro_${currentCamHeight}p_${new Date().getTime()}.webm`; document.body.appendChild(a); a.click(); setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); }
+        
+        function saveRecording() { 
+            const blob = new Blob(recordedChunks, { type: 'video/webm' }); 
+            const url = URL.createObjectURL(blob); 
+            const a = document.createElement('a'); 
+            a.style.display = 'none'; 
+            a.href = url; 
+            // Nama dibikin super unik pakai jam presisi (Date.now) biar TrebEdit ga ngambek
+            a.download = `Kajian_Pro_${currentCamHeight}p_${Date.now()}.webm`; 
+            document.body.appendChild(a); 
+            
+            // Diberi jeda napas 100 milidetik biar TrebEdit nyadar ada tombol donlot
+            setTimeout(() => {
+                a.click(); 
+                setTimeout(() => { 
+                    window.URL.revokeObjectURL(url); 
+                    document.body.removeChild(a); 
+                }, 500); 
+            }, 100);
+        }
 
         function formatTime(totalSeconds) { const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0'); const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0'); const s = (totalSeconds % 60).toString().padStart(2, '0'); return `${h}:${m}:${s}`; }
         
@@ -1058,15 +1176,12 @@
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Mantra Anti-Tidur Aktif!');
                     
                     wakeLock.addEventListener('release', () => {
                         console.log('Mantra terlepas, bersiap mengunci lagi...');
                     });
                 }
-            } catch (err) {
-                console.error('Gagal mengunci layar:', err);
-            }
+            } catch (err) {}
         }
         window.addEventListener('load', requestWakeLock);
         document.addEventListener('visibilitychange', async () => {
