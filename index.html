@@ -1044,7 +1044,7 @@
             updateStatus(isReconnecting ? 'Koneksi terputus! Menyambung ulang...' : 'Menyambung ke VPS...', 'text-yellow-600', 'fa-spinner fa-spin');
             
             try {
-                liveSocket = new WebSocket('wss://livestreamingattauhid.duckdns.org');
+                liveSocket = new WebSocket('wss://livestreamingattauhid.duckdns.org:3000');
             } catch(e) {
                 alert('Gagal: ' + e.message);
                 updateStatus(stream ? 'Kamera Aktif' : 'Standby', stream ? 'text-green-600' : 'text-gray-400', stream ? 'fa-video' : 'fa-circle');
