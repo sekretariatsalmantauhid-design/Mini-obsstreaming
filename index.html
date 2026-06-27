@@ -891,13 +891,6 @@ try {
     });
     video.srcObject = stream;
 }
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" },
-            audio: true
-        });
-        video.srcObject = stream;
-    } // <-- INI BARIS 893 DI GAMBAR BOS
-
     // --- SCRIPT MATA-MATA LENSA (PASTE DI SINI) ---
     setTimeout(async () => {
         console.log("=== DAFTAR LENSA YANG TERDETEKSI ===");
