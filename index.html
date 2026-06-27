@@ -552,7 +552,8 @@ getCameraDevices();
             console.log("====================================");
         }, 1000); 
         // ----------------------------------------------
-               
+        
+                
                 video.onloadedmetadata = async () => {
                     video.play().catch(e => {}); 
                     if (micNode) { micNode.disconnect(); micNode = null; }
@@ -865,40 +866,53 @@ getCameraDevices();
 
         async function startSatelliteMode() {
             try {
-                                // 1. Ambil nilai dropdown
-        const selectedVideoDevice = document.getElementById('videoSource') ? document.getElementById('videoSource').value : 'default';
+                        document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lensa...';
 
-        // 2. KODE ANTI-SELFIE (TANPA ZOOM)
-        let videoConstraints = { 
-            width: { ideal: 1920 }, 
-            height: { ideal: 1080 }
-        };
+// --- KONFIGURASI PAKSA 60 FPS (TRIK LENSA UTAMA) ---
+let videoConstraints = { 
+    width: { ideal: 1920 }, 
+    height: { ideal: 1080 },
+    frameRate: { ideal: 60, min: 30 }, // Memaksa 60 FPS agar pindah ke lensa utama
+    facingMode: { exact: "environment" } // Wajib kamera belakang
+};
 
-        if (selectedVideoDevice !== 'default' && selectedVideoDevice !== '') {
-            videoConstraints.deviceId = { exact: selectedVideoDevice };
-        } else {
-            // Menggunakan 'exact' memaksa browser hanya mengambil kamera belakang
-            videoConstraints.facingMode = { exact: "environment" }; 
-        }
-
-        // Eksekusi pemanggilan kamera
-        stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
-        
+try {
+    stream = await navigator.mediaDevices.getUserMedia({ 
+        video: videoConstraints, 
+        audio: true 
+    });
+    video.srcObject = stream;
+} catch (err) {
+    console.error("Gagal 60 FPS, mencoba fallback standar: ", err);
+    // Jika 60 FPS gagal (misal HP tidak support), mundur ke standar
+    stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" }, 
+        audio: true 
+    });
+    video.srcObject = stream;
+}
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: true
+        });
         video.srcObject = stream;
-                 stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
-        video.srcObject = stream;
+    } // <-- INI BARIS 893 DI GAMBAR BOS
 
-        // --- SCRIPT MATA-MATA LENSA (VERSI TERBAIK) ---
-        setTimeout(async () => {
-            console.log("=== DAFTAR LENSA YANG TERDETEKSI ===");
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            devices.filter(d => d.kind === 'videoinput').forEach(d => {
-                console.log("Lensa:", d.label, "| ID:", d.deviceId);
-            });
-            console.log("====================================");
-        }, 1000); 
-        // ----------------------------------------------
-         
+    // --- SCRIPT MATA-MATA LENSA (PASTE DI SINI) ---
+    setTimeout(async () => {
+        console.log("=== DAFTAR LENSA YANG TERDETEKSI ===");
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        devices.filter(d => d.kind === 'videoinput').forEach(d => {
+            console.log("Lensa:", d.label, "| ID:", d.deviceId);
+        });
+        console.log("====================================");
+    }, 1000); 
+    // ----------------------------------------------
+
+    video.play().catch(e => {}); // <-- INI BARIS 894 DI GAMBAR BOS
+    camOffPlaceholder.classList.add('hidden');
+    document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Menyambung...';
+    
                 video.play().catch(e => {});
                 camOffPlaceholder.classList.add('hidden');
                 document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Menyambung...';
