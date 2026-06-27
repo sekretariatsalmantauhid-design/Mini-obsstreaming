@@ -852,9 +852,28 @@ getCameraDevices();
 
         async function startSatelliteMode() {
             try {
-                document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lensa...';
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: true });
-                video.srcObject = stream; 
+                        document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lensa...';
+        
+        // --- AWAL TRIK HACKER SAMSUNG A56 ---
+        const selectedVideoDevice = document.getElementById('videoSource') ? document.getElementById('videoSource').value : 'default';
+        let videoConstraints = { 
+            width: { ideal: 1920, min: 1280 }, 
+            height: { ideal: 1080, min: 720 },
+            advanced: [{ zoom: 1.1 }] // Paksa sedikit zoom biar lensa Ultrawide mati dan pindah ke Normal
+        };
+
+        if (selectedVideoDevice !== 'default' && selectedVideoDevice !== '') {
+            videoConstraints.deviceId = { exact: selectedVideoDevice };
+        } else {
+            videoConstraints.facingMode = { ideal: "environment" }; 
+        }
+        // --- AKHIR TRIK ---
+
+        // Eksekusi pemanggilan kamera dengan setingan baru
+        stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
+        
+        video.srcObject = stream;
+         
                 video.play().catch(e => {});
                 camOffPlaceholder.classList.add('hidden');
                 document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Menyambung...';
