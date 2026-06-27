@@ -856,23 +856,24 @@ getCameraDevices();
         
         // --- AWAL TRIK HACKER SAMSUNG A56 ---
         const selectedVideoDevice = document.getElementById('videoSource') ? document.getElementById('videoSource').value : 'default';
+                // --- TAKTIK NETRAL: TANPA PAKSAAN RESOLUSI ---
         let videoConstraints = { 
-            width: { ideal: 1920, min: 1280 }, 
-            height: { ideal: 1080, min: 720 },
-            advanced: [{ zoom: 1.1 }] // Paksa sedikit zoom biar lensa Ultrawide mati dan pindah ke Normal
+            facingMode: { exact: "environment" },
+            // Hapus width/height agar sistem menggunakan mode default lensa utama (biasanya lensa normal, bukan ultra)
         };
 
-        if (selectedVideoDevice !== 'default' && selectedVideoDevice !== '') {
-            videoConstraints.deviceId = { exact: selectedVideoDevice };
-        } else {
-            videoConstraints.facingMode = { ideal: "environment" }; 
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
+            video.srcObject = stream;
+        } catch (err) {
+            console.log("Gagal lensa netral, mencoba tanpa exact: ", err);
+            // Backup jika 'exact' ditolak sistem
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" }, 
+                audio: true 
+            });
+            video.srcObject = stream;
         }
-        // --- AKHIR TRIK ---
-
-        // Eksekusi pemanggilan kamera dengan setingan baru
-        stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
-        
-        video.srcObject = stream;
          
                 video.play().catch(e => {});
                 camOffPlaceholder.classList.add('hidden');
