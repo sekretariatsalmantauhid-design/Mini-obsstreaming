@@ -461,27 +461,38 @@
         focusModeToggle.addEventListener('change', () => { applyFocusSettings(); if(!isRemoteAction) syncSettingsToFirebase(); });
         camFocusInput.addEventListener('input', () => { applyFocusSettings(); if(!isRemoteAction) syncSettingsToFirebase(); });
 
-// --- SCAN LENSA KAMERA ---
-const videoSelect = document.getElementById('videoSource');
-
+// --- SCAN LENSA KAMERA (REVISI V2) ---
 async function getCameraDevices() {
     try {
+        // PENTING: Cari elemen dropdown SAAT fungsi ini dipanggil, bukan di awal!
+        const videoSelect = document.getElementById('videoSource');
+        
+        // Kalau elemennya belum ada di layar (misal belum klik Mode Satelit), batalkan proses.
+        if (!videoSelect) return;
+
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         
         // Bersihkan opsi default (kecuali opsi pertama)
-        if(videoSelect) videoSelect.length = 1; 
+        videoSelect.length = 1; 
         
         videoDevices.forEach((device, index) => {
             const option = document.createElement('option');
             option.value = device.deviceId;
+            
+            // Catatan: Kalau izin kamera belum diberikan, label biasanya kosong. 
+            // Kita siapkan nama darurat "Lensa Kamera 1, 2, dst."
             option.text = device.label || `Lensa Kamera ${index + 1}`;
-            if(videoSelect) videoSelect.appendChild(option);
+            videoSelect.appendChild(option);
         });
     } catch (err) {
         console.error("Gagal mendeteksi lensa: ", err);
     }
 }
+
+// Panggil saat ada perubahan perangkat (misal habis colok mic eksternal)
+navigator.mediaDevices.addEventListener('devicechange', getCameraDevices);
+
 
 // Panggil saat aplikasi load dan saat ada perubahan perangkat
 navigator.mediaDevices.addEventListener('devicechange', getCameraDevices);
@@ -832,6 +843,8 @@ getCameraDevices();
     `;
 
                 document.getElementById('canvasWrapper').appendChild(satPanel);
+                // Panggil scanner lensa tepat setelah panel satelit muncul di layar!
+getCameraDevices();
                 document.getElementById('btnSatStart').addEventListener('click', startSatelliteMode);
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
             }
