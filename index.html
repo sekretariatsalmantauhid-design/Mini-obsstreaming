@@ -853,28 +853,31 @@ getCameraDevices();
         async function startSatelliteMode() {
             try {
                         document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lensa...';
-        
-        // --- AWAL TRIK HACKER SAMSUNG A56 ---
-        const selectedVideoDevice = document.getElementById('videoSource') ? document.getElementById('videoSource').value : 'default';
-                // --- TAKTIK NETRAL: TANPA PAKSAAN RESOLUSI ---
-        let videoConstraints = { 
-            facingMode: { exact: "environment" },
-            // Hapus width/height agar sistem menggunakan mode default lensa utama (biasanya lensa normal, bukan ultra)
-        };
 
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
-            video.srcObject = stream;
-        } catch (err) {
-            console.log("Gagal lensa netral, mencoba tanpa exact: ", err);
-            // Backup jika 'exact' ditolak sistem
-            stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment" }, 
-                audio: true 
-            });
-            video.srcObject = stream;
-        }
-         
+// --- KONFIGURASI PAKSA 60 FPS (TRIK LENSA UTAMA) ---
+let videoConstraints = { 
+    width: { ideal: 1920 }, 
+    height: { ideal: 1080 },
+    frameRate: { ideal: 60, min: 30 }, // Memaksa 60 FPS agar pindah ke lensa utama
+    facingMode: { exact: "environment" } // Wajib kamera belakang
+};
+
+try {
+    stream = await navigator.mediaDevices.getUserMedia({ 
+        video: videoConstraints, 
+        audio: true 
+    });
+    video.srcObject = stream;
+} catch (err) {
+    console.error("Gagal 60 FPS, mencoba fallback standar: ", err);
+    // Jika 60 FPS gagal (misal HP tidak support), mundur ke standar
+    stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" }, 
+        audio: true 
+    });
+    video.srcObject = stream;
+}
+       
                 video.play().catch(e => {});
                 camOffPlaceholder.classList.add('hidden');
                 document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Menyambung...';
