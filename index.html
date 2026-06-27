@@ -236,6 +236,12 @@
                                 <input type="text" id="rtmpCustom" placeholder="rtmp://..." class="w-full text-xs bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-900 font-mono shadow-sm">
                             </div>
                         </div>
+<div class="mb-4">
+  <label class="block text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-video mr-1 text-blue-400"></i>Pilih Lensa Kamera (Normal/Wide)</label>
+  <select id="videoSource" class="w-full text-xs bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-900 font-mono shadow-sm">
+    <option value="default">Kamera Belakang (Default)</option>
+  </select>
+</div>
 
                         <div class="flex gap-3 mb-4">
                             <button id="btnStartCam" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded font-semibold transition shadow-sm"><i class="fa-solid fa-camera mr-2"></i>Nyala Kamera</button>
@@ -455,6 +461,32 @@
         focusModeToggle.addEventListener('change', () => { applyFocusSettings(); if(!isRemoteAction) syncSettingsToFirebase(); });
         camFocusInput.addEventListener('input', () => { applyFocusSettings(); if(!isRemoteAction) syncSettingsToFirebase(); });
 
+// --- SCAN LENSA KAMERA ---
+const videoSelect = document.getElementById('videoSource');
+
+async function getCameraDevices() {
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        // Bersihkan opsi default (kecuali opsi pertama)
+        if(videoSelect) videoSelect.length = 1; 
+        
+        videoDevices.forEach((device, index) => {
+            const option = document.createElement('option');
+            option.value = device.deviceId;
+            option.text = device.label || `Lensa Kamera ${index + 1}`;
+            if(videoSelect) videoSelect.appendChild(option);
+        });
+    } catch (err) {
+        console.error("Gagal mendeteksi lensa: ", err);
+    }
+}
+
+// Panggil saat aplikasi load dan saat ada perubahan perangkat
+navigator.mediaDevices.addEventListener('devicechange', getCameraDevices);
+getCameraDevices();
+
         // --- KAMERA START/STOP ---
         const btnStartCam = document.getElementById('btnStartCam'); const btnStopCam = document.getElementById('btnStopCam');
 
@@ -467,7 +499,32 @@
                 const audioConstraints = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
                 if (selectedMic !== 'default') { audioConstraints.deviceId = { exact: selectedMic }; }
 
-                const constraints = { video: { facingMode: "environment", width: { ideal: currentCamWidth }, height: { ideal: currentCamHeight } }, audio: audioConstraints };
+                // Cek apa pilihan lensa di dropdown saat ini
+const selectedVideoDevice = document.getElementById('videoSource').value;
+
+// Susun pengaturan video murni
+let videoConstraints = { 
+    width: { ideal: currentCamWidth }, 
+    height: { ideal: currentCamHeight } 
+};
+
+// Kalau Bos milih lensa spesifik, pakai ID-nya. Kalau tidak, pakai default.
+if (selectedVideoDevice !== 'default' && selectedVideoDevice !== '') {
+    videoConstraints.deviceId = { exact: selectedVideoDevice };
+} else {
+    videoConstraints.facingMode = "environment";
+}
+
+// Gabungkan video dan audio
+const constraints = { 
+    video: videoConstraints, 
+    audio: audioConstraints 
+};
+
+// Panggil saat aplikasi load
+navigator.mediaDevices.addEventListener('devicechange', getCameraDevices);
+getCameraDevices();
+
                 camPlaceholderText.innerText = "Mengakses Kamera & Mic...";
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
@@ -757,13 +814,23 @@
                 
                 const satPanel = document.createElement('div');
                 satPanel.className = 'absolute bottom-12 left-0 w-full flex flex-col items-center z-50 pointer-events-auto bg-black/50 p-4';
-                satPanel.innerHTML = `
-                    <div class="text-center mb-4">
-                        <p class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-satellite-dish fa-fade"></i> MODE KAMERA SATELIT</p>
-                        <p class="text-white text-xs">Video otomatis dikirim ke Control Room.</p>
-                    </div>
-                    <button id="btnSatStart" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg border-2 border-emerald-400"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
-                `;
+                    satPanel.innerHTML = `
+        <div class="text-center mb-4">
+            <p class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-satellite-dish fa-fade"></i> MODE KAMERA SATELIT</p>
+            <p class="text-white text-xs">Video otomatis dikirim ke Control Room.</p>
+        </div>
+
+        <!-- Pemilih Lensa Khusus Satelit -->
+        <div class="mb-4 w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
+            <label class="block text-xs font-bold text-gray-300 mb-2"><i class="fa-solid fa-video mr-1 text-emerald-400"></i>Pilih Lensa (Normal/Wide):</label>
+            <select id="videoSource" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-2 py-2 focus:outline-none focus:border-emerald-500 text-white font-mono shadow-sm">
+                <option value="default">Kamera Belakang (Default)</option>
+            </select>
+        </div>
+
+        <button id="btnSatStart" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg border-2 border-emerald-400 transition-all"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
+    `;
+
                 document.getElementById('canvasWrapper').appendChild(satPanel);
                 document.getElementById('btnSatStart').addEventListener('click', startSatelliteMode);
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
@@ -1087,7 +1154,7 @@
                         canvasStream.addTrack(stream.getAudioTracks()[0]);
                     }
 
-                    const options = { mimeType: 'video/webm; codecs=h264' };
+                    const options = { mimeType: 'video/webm; codecs=h264', audioBitsPerSecond: 128000, videoBitsPerSecond: 2500000 };
                     try { liveRecorder = new MediaRecorder(canvasStream, options); } 
                     catch(e) { liveRecorder = new MediaRecorder(canvasStream); }
 
