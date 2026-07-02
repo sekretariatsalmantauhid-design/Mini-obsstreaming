@@ -238,7 +238,7 @@
                         </div>
 <div class="mb-4">
   <label class="block text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-video mr-1 text-blue-400"></i>Pilih Lensa Kamera (Normal/Wide)</label>
-  <select id="videoSource" class="w-full text-xs bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-900 font-mono shadow-sm">
+  <select id="cameraSelect" class="w-full text-xs bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-900 font-mono shadow-sm">
     <option value="default">Kamera Belakang (Default)</option>
   </select>
 </div>
@@ -464,7 +464,7 @@
 // --- SCAN LENSA KAMERA (REVISI V3 - TEKNIK PANCINGAN) ---
 async function getCameraDevices() {
     try {
-        const videoSelect = document.getElementById('videoSource');
+        const videoSelect = document.getElementById('cameraSelect');
         
         // Kalau elemen dropdown belum ada di layar, batalkan proses
         if (!videoSelect) return;
@@ -526,7 +526,7 @@ getCameraDevices();
                 if (selectedMic !== 'default') { audioConstraints.deviceId = { exact: selectedMic }; }
 
                 // Cek apa pilihan lensa di dropdown saat ini
-const selectedVideoDevice = document.getElementById('videoSource').value;
+const selectedVideoDevice = document.getElementById('cameraSelect').value;
 
 // Susun pengaturan video murni
 let videoConstraints = { 
