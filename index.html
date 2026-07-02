@@ -461,32 +461,47 @@
         focusModeToggle.addEventListener('change', () => { applyFocusSettings(); if(!isRemoteAction) syncSettingsToFirebase(); });
         camFocusInput.addEventListener('input', () => { applyFocusSettings(); if(!isRemoteAction) syncSettingsToFirebase(); });
 
-// --- SCAN LENSA KAMERA (REVISI V2) ---
+// --- SCAN LENSA KAMERA (REVISI V3 - TEKNIK PANCINGAN) ---
 async function getCameraDevices() {
     try {
-        // PENTING: Cari elemen dropdown SAAT fungsi ini dipanggil, bukan di awal!
         const videoSelect = document.getElementById('videoSource');
         
-        // Kalau elemennya belum ada di layar (misal belum klik Mode Satelit), batalkan proses.
+        // Kalau elemen dropdown belum ada di layar, batalkan proses
         if (!videoSelect) return;
 
+        // 1. KUNCI UTAMA: "Pancingan" Izin & Akses Hardware
+        // Kita nyalakan kamera secara buta (tanpa resolusi khusus) untuk membuka gembok API
+        const dummyStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        
+        // 2. Langsung matikan kembali track kameranya agar tidak berat dan boros memori
+        dummyStream.getTracks().forEach(track => track.stop());
+
+        // 3. SEKARANG baru kita bongkar daftar lensanya!
+        // Karena gembok sudah terbuka berkat pancingan di atas, sistem akan jujur 100%
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         
-        // Bersihkan opsi default (kecuali opsi pertama)
-        videoSelect.length = 1; 
+        // Bersihkan opsi default yang lama
+        videoSelect.innerHTML = '<option value="">-- Pilih Lensa Kamera (Asli) --</option>'; 
         
         videoDevices.forEach((device, index) => {
             const option = document.createElement('option');
             option.value = device.deviceId;
             
-            // Catatan: Kalau izin kamera belum diberikan, label biasanya kosong. 
-            // Kita siapkan nama darurat "Lensa Kamera 1, 2, dst."
-            option.text = device.label || `Lensa Kamera ${index + 1}`;
+            // device.label sekarang PASTI terisi (misal: "camera2 0, facing back", "camera2 2, facing back")
+            // Jika untuk alasan tertentu masih kosong, kita siapkan nama cadangan
+            option.text = device.label || `Lensa Hardware ${index + 1} (${device.deviceId.substring(0, 5)}...)`;
+            
             videoSelect.appendChild(option);
         });
+
+        console.log("Berhasil membongkar data lensa:", videoDevices);
+
     } catch (err) {
-        console.error("Gagal mendeteksi lensa: ", err);
+        console.error("Gagal mendeteksi lensa, pastikan izin kamera di Android Studio aktif: ", err);
+        
+        // Fallback UI jika gagal
+        videoSelect.innerHTML = '<option value="">Gagal Membaca Lensa</option>';
     }
 }
 
@@ -852,6 +867,26 @@ getCameraDevices();
                 <option value="default">Kamera Belakang (Default)</option>
             </select>
         </div>
+        
+<!-- Bagian Pemilih Lensa (Sudah ada di kode Bos) -->
+<div class="mb-3">
+    <label>Pilih Lensa Kamera:</label>
+    <select id="videoSource">...</select>
+</div>
+
+<!-- ====================================== -->
+<!-- PASTE KODE DROPDOWN RESOLUSI BOS DI SINI -->
+<div class="mt-3">
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+        <i class="fa-solid fa-compress"></i> Resolusi Video:
+    </label>
+    <select id="resolutionSelect" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+        <option value="480">SD - 480p (Paling Ringan & Lancar)</option>
+        <option value="720" selected>HD - 720p (Standar Aman & Stabil)</option>
+        <option value="1080">FHD - 1080p (Resolusi Tinggi / Rawan Panas)</option>
+    </select>
+</div>
+<!-- ====================================== -->
 
         <button id="btnSatStart" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg border-2 border-emerald-400 transition-all"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
     `;
@@ -865,32 +900,59 @@ getCameraDevices();
         }
 
         async function startSatelliteMode() {
-            try {
-                        document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lensa...';
+    try {
+        document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lensa...';
 
-// --- KONFIGURASI PAKSA 60 FPS (TRIK LENSA UTAMA) ---
-let videoConstraints = { 
-    width: { ideal: 1920 }, 
-    height: { ideal: 1080 },
-    frameRate: { ideal: 60, min: 30 }, // Memaksa 60 FPS agar pindah ke lensa utama
-    facingMode: { exact: "environment" } // Wajib kamera belakang
-};
+        // 1. INTELIJEN UI: Ambil nilai resolusi dari Dropdown yang dipilih Bos
+        const resValue = document.getElementById('resolutionSelect').value;
+        let idealWidth, idealHeight;
 
-try {
-    stream = await navigator.mediaDevices.getUserMedia({ 
-        video: videoConstraints, 
-        audio: true 
-    });
-    video.srcObject = stream;
-} catch (err) {
-    console.error("Gagal 60 FPS, mencoba fallback standar: ", err);
-    // Jika 60 FPS gagal (misal HP tidak support), mundur ke standar
-    stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" }, 
-        audio: true 
-    });
-    video.srcObject = stream;
+        // 2. LOGIKA RESOLUSI: Terjemahkan pilihan ke dalam pixel
+        if (resValue === "1080") {
+            idealWidth = 1920; 
+            idealHeight = 1080;
+        } else if (resValue === "480") {
+            idealWidth = 854;  
+            idealHeight = 480;
+        } else {
+            // Default 720p
+            idealWidth = 1280; 
+            idealHeight = 720; 
+        }
+
+        // 3. BANGUN KONFIGURASI DINAMIS
+        let videoConstraints = {
+            width: { ideal: idealWidth },
+            height: { ideal: idealHeight },
+            frameRate: { ideal: 30, max: 60 }, // FPS tetap kita jaga agar HP tidak meledak
+            facingMode: { exact: "environment" } 
+        };
+
+        // 4. NYALAKAN KAMERA DENGAN SETTINGAN TERSEBUT
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraints,
+            audio: true
+        });
+        video.srcObject = stream;
+
+    } catch (err) {
+        console.error("Gagal menyalakan kamera:", err);
+        // ... (Biarkan kode fallback / penanganan error Bos yang lama tetap di sini)
+        
+        // Contoh Fallback jika spesifikasi kamera HP tidak sanggup:
+        try {
+            console.warn("Mencoba resolusi standar bawaan sistem...");
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" },
+                audio: true
+            });
+            video.srcObject = stream;
+        } catch (fallbackErr) {
+            console.error("Kamera benar-benar gagal dimuat.", fallbackErr);
+        }
+    }
 }
+
     // --- SCRIPT MATA-MATA LENSA (PASTE DI SINI) ---
     setTimeout(async () => {
         console.log("=== DAFTAR LENSA YANG TERDETEKSI ===");
