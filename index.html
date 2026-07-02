@@ -987,11 +987,31 @@ document.getElementById('btnSatStart').innerHTML = '<i class="fa-solid fa-satell
                 if (event.candidate) window.fbPush(window.fbRef(window.fbDB, 'studio/webrtc/ice_satellite'), event.candidate.toJSON());
             };
 
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
+            // --- FUNGSI PEMBUAT OFFER WEBRTC (Bungkus di async function!) ---
+async function createAndSendOffer() {
+    try {
+        console.log("Memulai proses WebRTC Offer...");
 
-            await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc'), null);
-            await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc/offer'), { type: offer.type, sdp: offer.sdp });
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+
+        // Hapus data lama di Firebase dan kirim offer baru
+        await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc'), null);
+        await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc/offer'), {
+            type: offer.type,
+            sdp: offer.sdp
+        });
+
+        console.log("Offer berhasil dikirim ke Firebase!");
+    } catch (err) {
+        console.error("Gagal membuat WebRTC Offer: ", err);
+    }
+}
+
+// === CARA MEMANGGILNYA ===
+// Jangan taruh di baris 982 begitu saja!
+// Panggil fungsi ini saat tombol 'Nyalakan & Kirim P2P' ditekan:
+// createAndSendOffer();
 
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/webrtc/answer'), async (snapshot) => {
                 const answer = snapshot.val();
