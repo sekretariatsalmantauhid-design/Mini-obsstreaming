@@ -743,29 +743,28 @@ async function getCameraDevices() {
                 }
             });
 
+            // 💉 PERBAIKAN LOGIKA MULTI-THREADING (RECORD & LIVE BERSAMAAN)
             window.fbOnValue(window.fbRef(window.fbDB, 'studio/streamCommand'), (snapshot) => {
                 const cmd = snapshot.val();
                 if (cmd) {
                     if (cmd.action === 'start') {
                         btnStream.classList.add('hidden');
-                        btnRecord.classList.add('hidden');
                         btnStopStream.classList.remove('hidden');
                         
-                        if (stream && !liveSocket && appRole === 'control') {
+                        if (!liveSocket && appRole === 'control') {
                             initAudio();
                             isReconnecting = false;
                             mulaiStreaming();
-                        } else if (!stream) {
+                        } else if (appRole !== 'control') {
                             updateStatus('ON AIR (Remote)', 'text-red-600', 'fa-broadcast-tower fa-fade');
                         }
                     } else if (cmd.action === 'stop') {
                         btnStream.classList.remove('hidden');
-                        btnRecord.classList.remove('hidden');
                         btnStopStream.classList.add('hidden');
                         
                         if (liveSocket || liveRecorder) {
                             stopLiveStream();
-                        } else if (!stream) {
+                        } else if (appRole !== 'control') {
                             updateStatus('Standby', 'text-gray-400', 'fa-circle');
                         }
                     }
@@ -1254,7 +1253,6 @@ video.srcObject = stream;
                 
                 updateStatus('ON AIR (LIVE)', 'text-red-600', 'fa-broadcast-tower fa-fade');
                 btnStream.classList.add('hidden');
-               //  btnRecord.classList.add('hidden');
                 btnStopStream.classList.remove('hidden');
                 
                 const payload = JSON.stringify({
@@ -1324,7 +1322,6 @@ video.srcObject = stream;
             
             liveSocket = null;
             btnStream.classList.remove('hidden');
-           //  btnRecord.classList.remove('hidden'); 
             btnStopStream.classList.add('hidden');
             
             updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-600' : 'text-gray-400', stream ? 'fa-video' : 'fa-circle');
