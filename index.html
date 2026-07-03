@@ -834,40 +834,60 @@ async function getCameraDevices() {
                 
                 // PENTING: ID pada Dropdown Satelit ini DIBEDAKAN (satCameraSelect & satResolutionSelect) agar tidak bentrok dengan V15!
                 // Timpa bagian satPanel.innerHTML Bos dengan ini:
-satPanel.innerHTML = `
-    <div class="text-center mb-4">
-        <p class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-satellite-dish fa-fade"></i> MODE KAMERA SATELIT</p>
-        <p class="text-white text-xs">Video otomatis dikirim ke Control Room.</p>
-    </div>
+    satPanel.innerHTML = `
+        <!-- Pembungkus Utama: Diberi batas tinggi (max-h-screen) dan fitur scroll (overflow-y-auto) -->
+        <div class="w-full flex flex-col items-center justify-center max-h-[95vh] overflow-y-auto p-4 custom-scrollbar">
+            
+            <div class="text-center mb-4 mt-2">
+                <p class="text-emerald-400 font-bold mb-1 text-sm"><i class="fa-solid fa-satellite-dish fa-fade"></i> KAMERA SATELIT</p>
+                <p class="text-white text-[10px] opacity-70">Pastikan setingan sesuai sebelum siaran.</p>
+            </div>
 
-    <div class="mb-4 w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
-        <label class="block text-xs font-bold text-gray-300 mb-2"><i class="fa-solid fa-video mr-1 text-emerald-400"></i>Pilih Lensa (Normal/Wide):</label>
-        <select id="satCameraSelect" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-2 py-2 focus:outline-none focus:border-emerald-500 text-white font-mono shadow-sm">
-            <option value="default">Kamera Belakang (Default)</option>
-        </select>
-    </div>
+            <!-- JURUS GRID: 1 Kolom saat tegak, 2 Kolom saat mendatar (sm:grid-cols-2) -->
+            <div class="w-full max-w-lg grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                
+                <!-- 1. Lensa -->
+                <div class="bg-black/60 p-2 rounded-lg border border-emerald-500/40 backdrop-blur-sm">
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1"><i class="fa-solid fa-video mr-1 text-emerald-400"></i>Lensa:</label>
+                    <select id="satCameraSelect" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500 text-white font-mono shadow-sm">
+                        <option value="default">Kamera Belakang</option>
+                    </select>
+                </div>
 
-    <div class="mb-4 w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
-        <label class="block text-xs font-bold text-gray-300 mb-2"><i class="fa-solid fa-microphone mr-1 text-emerald-400"></i>Pilih Mikrofon:</label>
-        <select id="satAudioSelect" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-2 py-2 focus:outline-none focus:border-emerald-500 text-white font-mono shadow-sm">
-            <option value="default">Mic Bawaan HP (Default)</option>
-        </select>
-    </div>
-    
-    <div class="w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
-        <label class="block text-xs font-bold text-gray-300 mb-1">
-            <i class="fa-solid fa-compress"></i> Resolusi Video:
-        </label>
-        <select id="satResolutionSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded px-2 py-2 focus:outline-none focus:border-emerald-500 font-mono shadow-sm">
-            <option value="480">SD - 480p (Paling Ringan & Lancar)</option>
-            <option value="720" selected>HD - 720p (Standar Aman & Stabil)</option>
-            <option value="1080">FHD - 1080p (Resolusi Tinggi / Rawan Panas)</option>
-        </select>
-    </div>
+                <!-- 2. Mikrofon -->
+                <div class="bg-black/60 p-2 rounded-lg border border-emerald-500/40 backdrop-blur-sm">
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1"><i class="fa-solid fa-microphone mr-1 text-emerald-400"></i>Mikrofon:</label>
+                    <select id="satAudioSelect" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500 text-white font-mono shadow-sm">
+                        <option value="default">Mic Bawaan HP</option>
+                    </select>
+                </div>
+                
+                <!-- 3. Resolusi -->
+                <div class="bg-black/60 p-2 rounded-lg border border-emerald-500/40 backdrop-blur-sm">
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1"><i class="fa-solid fa-compress text-emerald-400"></i> Resolusi:</label>
+                    <select id="satResolutionSelect" class="w-full text-xs bg-gray-800 border border-gray-600 text-white rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500 font-mono shadow-sm">
+                        <option value="480">480p (Ringan)</option>
+                        <option value="720" selected>720p (Standar)</option>
+                        <option value="1080">1080p (Resolusi Tinggi)</option>
+                    </select>
+                </div>
 
-    <button id="btnSatStart" class="mt-6 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg border-2 border-emerald-400 transition-all"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
-`;
+                <!-- 4. FPS (Fitur Baru) -->
+                <div class="bg-black/60 p-2 rounded-lg border border-emerald-500/40 backdrop-blur-sm">
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1"><i class="fa-solid fa-gauge-high text-emerald-400"></i> Frame Rate:</label>
+                    <select id="satFpsSelect" class="w-full text-xs bg-gray-800 border border-gray-600 text-white rounded px-2 py-1.5 focus:outline-none focus:border-emerald-500 font-mono shadow-sm">
+                        <option value="30">30 FPS (Aman & Adem)</option>
+                        <option value="60" selected>60 FPS (Sangat Mulus)</option>
+                    </select>
+                </div>
 
+            </div>
+
+            <!-- Tombol Nyalakan -->
+            <button id="btnSatStart" class="w-full max-w-sm bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-bold shadow-lg border-2 border-emerald-400 transition-all mb-4 text-sm"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
+            
+        </div>
+    `;
                 document.getElementById('canvasWrapper').appendChild(satPanel);
 
                 setTimeout(() => {
@@ -900,8 +920,16 @@ const camId = camSelect ? camSelect.value : "default";
 
 const micSelect = document.getElementById('satAudioSelect');
 const micId = micSelect ? micSelect.value : "default";
+        // 💉 3. Tarik data FPS dari dropdown (Taruh di baris 923)
+        const fpsSelect = document.getElementById('satFpsSelect');
+        const selectedFps = fpsSelect ? parseInt(fpsSelect.value) : 30; // Default aman di 30 FPS
 
-let videoConstraints = { width: { ideal: idealWidth }, height: { ideal: idealHeight }, frameRate: { ideal: 30, max: 60 } };
+        // Ganti baris 924 yang lama dengan ini:
+        let videoConstraints = { 
+            width: { ideal: idealWidth }, 
+            height: { ideal: idealHeight }, 
+            frameRate: { ideal: selectedFps, max: selectedFps } // Sekarang FPS-nya dinamis mengikuti pilihan Bos!
+        };
 if (camId && camId !== 'default') {
     videoConstraints.deviceId = { exact: camId };
 } else {
