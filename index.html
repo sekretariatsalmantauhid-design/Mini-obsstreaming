@@ -1338,9 +1338,9 @@ video.srcObject = stream;
             const options = { mimeType: 'video/webm; codecs=vp9' }; try { mediaRecorder = new MediaRecorder(canvasStream, options); } catch (e) { mediaRecorder = new MediaRecorder(canvasStream); }
             recordedChunks = []; mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
             mediaRecorder.onstop = saveRecording; mediaRecorder.start(); isRecording = true;
-            btnRecord.classList.add('hidden'); // btnStream.classList.add('hidden'); btnStopRecord.classList.remove('hidden'); updateStatus('Merekam...', 'text-red-600', 'fa-circle-dot');
+            btnRecord.classList.add('hidden'); btnStopRecord.classList.remove('hidden'); updateStatus('Merekam...', 'text-red-600', 'fa-circle-dot');
         });
-        btnStopRecord.addEventListener('click', () => { if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; btnRecord.classList.remove('hidden'); // btnStream.classList.remove('hidden'); btnStopRecord.classList.add('hidden'); updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-600' : 'text-gray-400', stream ? 'fa-video' : 'fa-circle'); } });
+        btnStopRecord.addEventListener('click', () => { if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; btnRecord.classList.remove('hidden'); btnStopRecord.classList.add('hidden'); updateStatus(stream ? `Kamera Aktif (${currentCamWidth}x${currentCamHeight})` : 'Standby', stream ? 'text-green-600' : 'text-gray-400', stream ? 'fa-video' : 'fa-circle'); } });
         
         function saveRecording() { 
             const blob = new Blob(recordedChunks, { type: 'video/webm' }); 
