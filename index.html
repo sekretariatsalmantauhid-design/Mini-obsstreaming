@@ -923,25 +923,36 @@ video.srcObject = stream;
                 
                 if (btnSat) btnSat.innerHTML = '<i class="fa-solid fa-satellite-dish fa-fade"></i> Menyambung P2P...';
 
-                // 4. Inisialisasi WebRTC
-                if (!window.peerConnection) {
-                    window.peerConnection = new RTCPeerConnection(rtcConfig);
-                } else {
-                    window.peerConnection.close();
-                    window.peerConnection = new RTCPeerConnection(rtcConfig);
-                }
+                // Ganti bagian inisialisasi peerConnection dengan ini di dalam startSatelliteMode:
 
-                window.peerConnection.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        window.fbPush(window.fbRef(window.fbDB, 'studio/webrtc/ice_satellite'), event.candidate.toJSON());
-                    }
-                };
+        // 4. Inisialisasi WebRTC dengan preferensi H.264 (Hardware Acceleration)
+        if (!window.peerConnection) {
+            window.peerConnection = new RTCPeerConnection(rtcConfig);
+        }
 
-                stream.getTracks().forEach(track => window.peerConnection.addTrack(track, stream));
+        // Tambahkan track ke peerConnection
+        stream.getTracks().forEach(track => window.peerConnection.addTrack(track, stream));
 
-                // 5. Buat Offer & Kirim ke Firebase
-                const offer = await window.peerConnection.createOffer();
-                await window.peerConnection.setLocalDescription(offer);
+        // JURUS NINJA: MEMAKSA HARDWARE ENCODING (H.264)
+        const transceiver = window.peerConnection.getTransceivers().find(t => t.sender && t.sender.track.kind === 'video');
+        if (transceiver && transceiver.setCodecPreferences) {
+            const codecs = RTCRtpSender.getCapabilities('video').codecs;
+            const h264Codec = codecs.find(c => c.mimeType === 'video/H264');
+            if (h264Codec) {
+                transceiver.setCodecPreferences([h264Codec]);
+                console.log("Suntikan H.264 Sukses! Jalur tol hardware aktif.");
+            }
+        }
+
+        window.peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                window.fbPush(window.fbRef(window.fbDB, 'studio/webrtc/ice_satellite'), event.candidate.toJSON());
+            }
+        };
+
+        // 5. Buat Offer & Kirim ke Firebase
+        const offer = await window.peerConnection.createOffer();
+        await window.peerConnection.setLocalDescription(offer);
 
                 await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc'), null);
                 await window.fbSet(window.fbRef(window.fbDB, 'studio/webrtc/offer'), { type: offer.type, sdp: offer.sdp });
