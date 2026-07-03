@@ -470,42 +470,58 @@
         camFocusInput.addEventListener('input', () => { applyFocusSettings(); if(!isRemoteAction) syncSettingsToFirebase(); });
 
         // --- SCAN LENSA KAMERA (REVISI V4 - ANTI DOM CONFLICT) ---
-        async function getCameraDevices() {
-            try {
-                // Cari kedua dropdown (V15 & V16) agar terisi semua jika ada
-                const videoSelectV15 = document.getElementById('cameraSelect');
-                const videoSelectV16 = document.getElementById('satCameraSelect');
-                
-                if (!videoSelectV15 && !videoSelectV16) return;
+        // Timpa seluruh fungsi getCameraDevices dengan ini:
+async function getCameraDevices() {
+    try {
+        const videoSelectV15 = document.getElementById('cameraSelect');
+        const videoSelectV16 = document.getElementById('satCameraSelect');
+        const audioSelectV16 = document.getElementById('satAudioSelect');
+        
+        if (!videoSelectV15 && !videoSelectV16) return;
 
-                const dummyStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                dummyStream.getTracks().forEach(track => track.stop());
+        const dummyStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        dummyStream.getTracks().forEach(track => track.stop());
 
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                
-                if (videoSelectV15) {
-                    videoSelectV15.innerHTML = '<option value="default">Kamera Belakang (Default)</option>'; 
-                    videoDevices.forEach((device, index) => {
-                        const option = document.createElement('option');
-                        option.value = device.deviceId;
-                        option.text = device.label || `Lensa Hardware ${index + 1}`;
-                        videoSelectV15.appendChild(option);
-                    });
-                }
-                if (videoSelectV16) {
-                    videoSelectV16.innerHTML = '<option value="default">Kamera Belakang (Default)</option>'; 
-                    videoDevices.forEach((device, index) => {
-                        const option = document.createElement('option');
-                        option.value = device.deviceId;
-                        option.text = device.label || `Lensa Hardware ${index + 1}`;
-                        videoSelectV16.appendChild(option);
-                    });
-                }
-            } catch (err) {
-                console.error("Gagal mendeteksi lensa: ", err);
-            }
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        const audioDevices = devices.filter(device => device.kind === 'audioinput');
+        
+        if (videoSelectV15) {
+            videoSelectV15.innerHTML = '<option value="default">Kamera Belakang (Default)</option>'; 
+            videoDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Lensa Hardware ${index + 1}`;
+                videoSelectV15.appendChild(option);
+            });
         }
+        if (videoSelectV16) {
+            videoSelectV16.innerHTML = '<option value="default">Kamera Belakang (Default)</option>'; 
+            videoDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Lensa Hardware ${index + 1}`;
+                videoSelectV16.appendChild(option);
+            });
+        }
+        if (audioSelectV16) {
+            audioSelectV16.innerHTML = '<option value="default">Mic Bawaan HP (Default)</option>';
+            let micCount = 1;
+            audioDevices.forEach(device => {
+                if(device.deviceId && device.deviceId !== 'default' && device.deviceId !== 'communications') {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    // Jika terdeteksi USB Audio/Wireless, namanya akan masuk ke sini
+                    option.text = device.label || `Mic Eksternal/Wireless ${micCount++}`;
+                    audioSelectV16.appendChild(option);
+                }
+            });
+        }
+    } catch (err) {
+        console.error("Gagal mendeteksi hardware: ", err);
+    }
+}
+
 
         // --- KAMERA START/STOP (CONTROL ROOM V15) ---
         const btnStartCam = document.getElementById('btnStartCam'); const btnStopCam = document.getElementById('btnStopCam');
@@ -817,32 +833,40 @@
                 satPanel.className = 'absolute bottom-12 left-0 w-full flex flex-col items-center z-50 pointer-events-auto bg-black/50 p-4';
                 
                 // PENTING: ID pada Dropdown Satelit ini DIBEDAKAN (satCameraSelect & satResolutionSelect) agar tidak bentrok dengan V15!
-                satPanel.innerHTML = `
-                    <div class="text-center mb-4">
-                        <p class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-satellite-dish fa-fade"></i> MODE KAMERA SATELIT</p>
-                        <p class="text-white text-xs">Video otomatis dikirim ke Control Room.</p>
-                    </div>
+                // Timpa bagian satPanel.innerHTML Bos dengan ini:
+satPanel.innerHTML = `
+    <div class="text-center mb-4">
+        <p class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-satellite-dish fa-fade"></i> MODE KAMERA SATELIT</p>
+        <p class="text-white text-xs">Video otomatis dikirim ke Control Room.</p>
+    </div>
 
-                    <div class="mb-4 w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
-                        <label class="block text-xs font-bold text-gray-300 mb-2"><i class="fa-solid fa-video mr-1 text-emerald-400"></i>Pilih Lensa (Normal/Wide):</label>
-                        <select id="satCameraSelect" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-2 py-2 focus:outline-none focus:border-emerald-500 text-white font-mono shadow-sm">
-                            <option value="default">Kamera Belakang (Default)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mt-3 w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
-                        <label class="block text-xs font-bold text-gray-300 mb-1">
-                            <i class="fa-solid fa-compress"></i> Resolusi Video:
-                        </label>
-                        <select id="satResolutionSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded px-2 py-2 focus:outline-none focus:border-emerald-500 font-mono shadow-sm">
-                            <option value="480">SD - 480p (Paling Ringan & Lancar)</option>
-                            <option value="720" selected>HD - 720p (Standar Aman & Stabil)</option>
-                            <option value="1080">FHD - 1080p (Resolusi Tinggi / Rawan Panas)</option>
-                        </select>
-                    </div>
+    <div class="mb-4 w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
+        <label class="block text-xs font-bold text-gray-300 mb-2"><i class="fa-solid fa-video mr-1 text-emerald-400"></i>Pilih Lensa (Normal/Wide):</label>
+        <select id="satCameraSelect" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-2 py-2 focus:outline-none focus:border-emerald-500 text-white font-mono shadow-sm">
+            <option value="default">Kamera Belakang (Default)</option>
+        </select>
+    </div>
 
-                    <button id="btnSatStart" class="mt-6 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg border-2 border-emerald-400 transition-all"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
-                `;
+    <div class="mb-4 w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
+        <label class="block text-xs font-bold text-gray-300 mb-2"><i class="fa-solid fa-microphone mr-1 text-emerald-400"></i>Pilih Mikrofon:</label>
+        <select id="satAudioSelect" class="w-full text-xs bg-gray-800 border border-gray-600 rounded px-2 py-2 focus:outline-none focus:border-emerald-500 text-white font-mono shadow-sm">
+            <option value="default">Mic Bawaan HP (Default)</option>
+        </select>
+    </div>
+    
+    <div class="w-full max-w-xs bg-black/60 p-3 rounded-lg border border-emerald-500/50 backdrop-blur-sm">
+        <label class="block text-xs font-bold text-gray-300 mb-1">
+            <i class="fa-solid fa-compress"></i> Resolusi Video:
+        </label>
+        <select id="satResolutionSelect" class="w-full bg-gray-800 border border-gray-600 text-white rounded px-2 py-2 focus:outline-none focus:border-emerald-500 font-mono shadow-sm">
+            <option value="480">SD - 480p (Paling Ringan & Lancar)</option>
+            <option value="720" selected>HD - 720p (Standar Aman & Stabil)</option>
+            <option value="1080">FHD - 1080p (Resolusi Tinggi / Rawan Panas)</option>
+        </select>
+    </div>
+
+    <button id="btnSatStart" class="mt-6 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg border-2 border-emerald-400 transition-all"><i class="fa-solid fa-broadcast-tower mr-2"></i> Nyalakan & Kirim P2P</button>
+`;
 
                 document.getElementById('canvasWrapper').appendChild(satPanel);
 
@@ -868,20 +892,32 @@
                 if (resValue === "1080") { idealWidth = 1920; idealHeight = 1080; } 
                 else if (resValue === "480") { idealWidth = 854; idealHeight = 480; }
 
-                // 2. Ambil lensa dari dropdown khusus satelit
-                const camSelect = document.getElementById('satCameraSelect');
-                const camId = camSelect ? camSelect.value : "default";
-                
-                let videoConstraints = { width: { ideal: idealWidth }, height: { ideal: idealHeight }, frameRate: { ideal: 30, max: 60 } };
-                if (camId && camId !== 'default') {
-                    videoConstraints.deviceId = { exact: camId };
-                } else {
-                    videoConstraints.facingMode = "environment";
-                }
+                // Di dalam window.startSatelliteMode, ubah bagian pemanggilan getUserMedia menjadi seperti ini:
 
-                // 3. Nyalakan Kamera
-                stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
-                video.srcObject = stream;
+// 2. Ambil lensa & mic dari dropdown khusus satelit
+const camSelect = document.getElementById('satCameraSelect');
+const camId = camSelect ? camSelect.value : "default";
+
+const micSelect = document.getElementById('satAudioSelect');
+const micId = micSelect ? micSelect.value : "default";
+
+let videoConstraints = { width: { ideal: idealWidth }, height: { ideal: idealHeight }, frameRate: { ideal: 30, max: 60 } };
+if (camId && camId !== 'default') {
+    videoConstraints.deviceId = { exact: camId };
+} else {
+    videoConstraints.facingMode = "environment";
+}
+
+let audioConstraints = { echoCancellation: false, noiseSuppression: false };
+if (micId && micId !== 'default') {
+    audioConstraints.deviceId = { exact: micId };
+} else {
+    audioConstraints = true;
+}
+
+// 3. Nyalakan Kamera & Mic Eksternal
+stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: audioConstraints });
+video.srcObject = stream;
                 await video.play().catch(e => {});
                 camOffPlaceholder.classList.add('hidden');
                 

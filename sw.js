@@ -1,5 +1,5 @@
 // UBAH ANGKA INI SETIAP KALI BOS UPDATE index.html (Misal: v2, v3, v4)
-const CACHE_NAME = 'mini-obs-v9.6.8'; 
+const CACHE_NAME = 'mini-obs-v9.6.9'; 
 
 const urlsToCache = [
  './',
